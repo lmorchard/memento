@@ -1,0 +1,9 @@
+{
+	"id": "com.decafbad.prepad",
+	"version": "0.0.1",
+	"vendor": "0xDECAFBAD",
+	"type": "web",
+	"main": "index.html",
+	"title": "PrePad",
+	"icon": "icon.png"
+}
