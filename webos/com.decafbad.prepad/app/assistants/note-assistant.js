@@ -1,18 +1,16 @@
 /**
- *
+ * Single note scene assistant.
  */
 function NoteAssistant (note) {
     this.notes_model = new NotesModel();
     this.note = note;
 }
 
-/**
- *
- */
 NoteAssistant.prototype = (function () {
 
     return {
         setup: function () {
+            console.log('NOTE SETUP');
             
             $('header').update(this.note.name);
 
@@ -37,12 +35,15 @@ NoteAssistant.prototype = (function () {
         },
 
         activate: function (event) {
+            console.log('NOTE ACTIVATE');
         },
 
         deactivate: function (event) {
+            console.log('NOTE DEACTRIVATE');
         },
 
         cleanup: function (event) {
+            console.log('NOTE CLEANUP');
         }
 
     };

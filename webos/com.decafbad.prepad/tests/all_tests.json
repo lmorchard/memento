@@ -1,0 +1,7 @@
+[
+	{
+		"title": "Notes Model Tests",
+		"source": "tests/notes-model_tests.js",
+		"testFunction": "NotesModelTests"
+	}
+]

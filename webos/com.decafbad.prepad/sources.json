@@ -1,14 +1,10 @@
 [
+    {"source": "vendor\/Math.uuid.js"},
     {"source": "app\/models\/notes-model.js"},
-    {"source": "tests\/models\/notes-model.js"},
     {"source": "app\/assistants\/stage-assistant.js"},
     {
-        "scenes": "first",
-        "source": "app\/assistants\/first-assistant.js"
-    },
-    {
-        "scenes": "home-scene",
-        "source": "app\/assistants\/home-scene-assistant.js"
+        "scenes": "test",
+        "source": "app\/assistants\/test-assistant.js"
     },
     {
         "scenes": "home",

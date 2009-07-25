@@ -1,1 +1,35 @@
-/* Put Application specific CSS here. */
+.test-passed-true {
+    color: green;
+}
+.test-passed-false {
+    color: red;
+}
+#test-results .palm-group .palm-list .row {
+    padding-left: 10px;
+}
+
+.home-scene #notes-list .palm-list .palm-group.unlabeled {
+    border: none;
+    -webkit-border-image: none;
+}
+.home-scene #notes-list .palm-list .palm-group.unlabeled .palm-group-title {
+    display: none;
+}
+.home-scene #notes-list .palm-list .palm-group.unlabeled .palm-list {
+    margin: -8px -8px -8px -8px;
+}
+.home-scene #notes-list .palm-list .palm-group .first .palm-swipe-delete {
+    -webkit-border-image: url(file:///usr/palm/frameworks/mojo/submissions/191.14/images/palm-delete-group.png) 24 20 24 20 repeat repeat;
+}
+.home-scene #notes-list .palm-list .palm-group .last .palm-swipe-delete {
+    -webkit-border-image: url(file:///usr/palm/frameworks/mojo/submissions/191.14/images/palm-delete-group.png) 24 20 24 20 repeat repeat;
+}
+.home-scene #notes-list .palm-list .palm-group .palm-row.selected.first {
+  -webkit-border-image: url(file:///usr/palm/frameworks/mojo/submissions/191.14/images/selection-gradient-single.png) 24 20 24 20 repeat repeat;
+}
+.home-scene #notes-list .palm-list .palm-group .palm-row.selected.single {
+  -webkit-border-image: url(file:///usr/palm/frameworks/mojo/submissions/191.14/images/selection-gradient-single.png) 24 20 24 20 repeat repeat;
+}
+.home-scene #notes-list .palm-list .palm-group .palm-row.selected.last {
+  -webkit-border-image: url(file:///usr/palm/frameworks/mojo/submissions/191.14/images/selection-gradient-single.png) 24 20 24 20 repeat repeat;
+}
