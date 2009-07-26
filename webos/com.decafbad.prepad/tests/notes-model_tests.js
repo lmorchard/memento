@@ -4,71 +4,25 @@
  * @author l.m.orchard@pobox.com
  * @see NotesModel
  */
-
-Sequence = Class.create({
-
-    initialize: function (on_finish, actions) {
-        this.running = null;
-
-        this.sync = new Mojo.Function.Synchronize({
-            syncCallback: on_finish
-        });
+function NotesModelTests(tickleFunction) {
+    this.initialize(tickleFunction);
+}
+NotesModelTests.prototype = function() {
         
-        this.actions = [];
-        if (actions) actions.each(function(action) {
-            this.push(action);
-        }.bind(this));
-    },
-
-    push: function(cb) {
-        var sync_done = this.sync.wrap(function(){});
-
-        var done = function(do_next) {
-            sync_done();
-            if (false == this.running) {
-                this.next();
-            }
-        }.bind(this);
-
-        this.actions.push(function() {
-            cb(done) 
-        }.bind(this));
-    },
-
-    start: function() {
-        if (null !== this.running) return;
-        this.running = false;
-        this.next();
-    },
-
-    next: function() {
-        if (false !== this.running) return;
-        var action = this.actions.shift();
-        return action();
-    },
-
-    run: function() {
-        if (null !== this.running) return;
-        this.running = true;
-        this.actions.each(function(fn) {
-            return fn();
-        });
-    }
-
-});
-
-NotesModelTests = (function() {
-        
-    return Class.create({
+    return {
 
         /**
-         * Set up for a test.
+         * Test setup, run before execution of each test.
          */
-        initialize: function(tickleFunction) {
+        initialize: function (tickleFunction) {
+            this.name = "Notes Model";
             this.tickleFunction = tickleFunction;
 
             this.notes_model = new NotesModel('PrePadNotes_Test');
             this.notes_model.reset();
+
+            this.notes = [];
+            this.by_id = {};
 
             this.test_data = [
                 'alpha', 'beta', 'gamma', 'delta', 'epsilon', 
@@ -79,145 +33,265 @@ NotesModelTests = (function() {
                     text: 'This is sample text for ' + name
                 };
             }.bind(this));
+           
         },
 
         /**
-         * Exercise basic model CRUD.
+         * Exercise basic add/delete.
          */
-        testCRUD: function(recordResults) {
+        testAddDelete: function(recordResults) {
+            new Chain([
+                this._ensureEmpty.bind(this),
+                this._addNotes.bind(this),
+                this._deleteNotes.bind(this),
+                this._ensureEmpty.bind(this),
+                function() { recordResults(Mojo.Test.passed); }
+            ]).start();
+        },
 
-            var notes = [];
+        /**
+         * Exercise finding single notes by ID.
+         */
+        testFind: function(recordResults) {
+            new Chain([
+                this._addNotes.bind(this),
+                this._checkSavedNotes.bind(this),
+                function() { recordResults(Mojo.Test.passed); }
+            ]).start();
+        },
 
-            var main_seq = new Sequence(
-                function() {
-                    // Report test passed when the main sequence is done.
-                    recordResults(Mojo.Test.passed);
-                }
+        /**
+         * Exercise finding multiple notes by filter.
+         */
+        testFindAll: function(recordResults) {
+            new Chain([
+                this._addNotes.bind(this),
+                this._checkMultipleSavedNotes.bind(this),
+                function() { recordResults(Mojo.Test.passed); }
+            ]).start();
+        },
+
+        /**
+         * Exercise Modification date updates on save.
+         */
+        testModificationDates: function (recordResults) {
+            new Chain([
+                this._addNotes.bind(this),
+                this._checkModificationDates.bind(this),
+                function() { recordResults(Mojo.Test.passed); }
+            ]).start();
+        },
+
+        /**
+         * Ensure that there are no saved notes at first.
+         */
+        _ensureEmpty: function (main_done) {
+            this.notes_model.findAll(
+                null, null, null,
+                function(notes) {
+                    Mojo.require(
+                        0 == notes.length, 
+                        "Notes should be empty at first"
+                    );
+                    main_done();
+                }.bind(this),
+                function() { throw "Note findAll failed"; }
+            );
+        },
+
+        /**
+          * Chain a series of note adds, asserting auto-defined 
+          * properties of each upon success.
+          */
+        _addNotes: function (main_done) {
+            var chain = new Chain();
+
+            this.test_data.each(function (data) {
+                chain.push(function (done) {
+
+                    var check_note = function (note) {
+
+                        // Retain the note just saved.
+                        this.notes.push(note); 
+                        this.by_id[note.id] = note;
+
+                        // Ensure some properties were auto-set.
+                        ['id', 'created', 'modified'].each(function (name) {
+                            Mojo.require(
+                                (typeof note[name]) !== 'undefined',
+                                'Note ' + name + ' should be defined'
+                            );
+                        }.bind(this));
+
+                        done();
+                    }.bind(this);
+
+                    this.notes_model.add(
+                        data, 
+                        check_note,
+                        function() { throw "Note add failed"; }
+                    );
+
+                }.bind(this))
+            }.bind(this));
+
+            chain.push(main_done);
+            chain.start();
+        },
+
+        /**
+         * Check contents of notes, an individual fetch at a time.
+         */
+        _checkSavedNotes: function (main_done) {
+            var chain = new Chain();
+            var prop_names = [
+                'id', 'name', 'text', 'created', 'modified'
+            ];
+
+            this.notes.each(function (expected_note) {
+                chain.push(function (done) { 
+
+                    var check_note = function (result_note) {
+                        prop_names.each(function (name) {
+                            Mojo.requireEqual(
+                                result_note[name], expected_note[name],
+                                'Note ' + name + ' should match'
+                            );
+                        }.bind(this)),
+                        done();
+                    }.bind(this)
+
+                    this.notes_model.find(
+                        expected_note.id, 
+                        check_note,
+                        function() { throw "Note find failed"; }
+                    );
+
+                }.bind(this))
+            }.bind(this));
+
+            chain.push(main_done);
+            chain.start();
+        },
+
+        /**
+         * Check contents of notes by fetching multiples at once.
+         */
+        _checkMultipleSavedNotes: function (main_done) {
+            var prop_names = [
+                'id', 'name', 'text', 'created', 'modified'
+            ];
+
+            this.notes_model.findAll(
+                null, null, null,
+                function(notes) {
+                    notes.each(function(result) {
+
+                        var expected = this.by_id[result.id];
+                        prop_names.each(function(name) {
+                            Mojo.requireEqual(
+                                result[name], expected[name],
+                                'Note ' + name + ' should match'
+                            );
+                        }.bind(this));
+
+                    }.bind(this));
+                    main_done();
+                }.bind(this),
+                function() { throw "Note findAll failed"; }
             );
 
-            // Sequence a series of note adds, asserting auto-defined 
-            // properties of each upon success.
-            main_seq.push(function(main_done) {
-                var seq = new Sequence(function() { main_done(); });
+        },
 
-                this.test_data.each(function(data, idx) {
-                    seq.push(function(done) {
+        /**
+         * Try updating notes and assert that modification date changed.
+         */
+        _checkModificationDates: function (main_done) {
 
-                        var check_note = function (note) { 
-                            notes.push(note); 
-                            ['id', 'created', 'modified'].each(function(name) {
-                                Mojo.require((typeof note[name]) !== 'undefined',
-                                    'Note ' + name + ' should be defined');
-                            }.bind(this));
-                            done(); 
-                        }.bind(this)
-
-                        this.notes_model.add(
-                            data, check_note, 
-                            function() { throw "Note add failed"; }
-                        );
-
-                    }.bind(this));
-                }.bind(this));
-
-                seq.run();
-
-            }.bind(this));
-
-            // Check contents of known added notes against fetched notes
-            main_seq.push(function(main_done) {
-                var seq = new Sequence(function() { main_done(); });
-
-                notes.each(function(expected_note) {
-                    seq.push(function(done) { 
-
-                        var assert_note = function(result_note) {
-                            ['id', 'name', 'text', 'created', 'modified'].each(function(name) {
-                                Mojo.requireEqual(result_note[name], expected_note[name],
-                                    'Note ' + name + ' should match');
-                            }.bind(this));
-                            done();
-                        }.bind(this);
-
-                        this.notes_model.find(
-                            expected_note.id, assert_note,
-                            function() { done(); throw "Note find failed"; }
-                        );
-
-                    }.bind(this));
-                }.bind(this));
-
-                seq.run();
-
-            }.bind(this));
-
-            // Try updating notes and assert that modification date changed.
-            main_seq.push(function(main_done) {
-
-                // Waste some time before playing with timestamps.
-                var time = function() { return (new Date()).getTime(); },
-                    stop = time() + 500;
-                while (time() < stop) {  }
+            // Waste some time before playing with timestamps.
+            var time = function ()  { return (new Date()).getTime(); },
+                stop = time() + 500;
+            while (time() < stop) {  }
                 
-                // Still alive here, by the way.
-                this.tickleFunction();
+            // Still alive here, by the way.
+            this.tickleFunction() ;
 
-                var seq = new Sequence(function() { main_done(); });
-                notes.each(function(note) {
-                    seq.push(function(done) { 
+            var chain = new Chain();
 
-                        var orig_modified = note.modified;
+            this.notes.each(function(note) {
+                var orig_modified = note.modified;
+                
+                chain.push(function(done) {
+                    note.name += '_changed';
+                    note.text = 'Changed note ' + note.name;
 
-                        note.name += '_changed';
-                        note.text = 'Changed note ' + note.name;
-
-                        var check_date = function(result_note) {
-                            this.notes_model.find(
-                                result_note.id,
-                                function(fetched) {
-                                    Mojo.require(orig_modified != fetched.modified,
-                                        "Modification dates should differ after save");
-                                    done();
-                                },
-                                function() { throw "Note find failed"; }
+                    this.notes_model.save(
+                        note, 
+                        function(saved) {
+                            Mojo.require(
+                                orig_modified !== saved.modified,
+                                "Saved modification date should differ"
                             );
-                        }.bind(this);
-
-                        this.notes_model.save(
-                            note, check_date,
-                            function() { throw "Note add failed"; }
-                        );
-
-                    }.bind(this));
+                            done();
+                        },
+                        function() { throw "Note save failed"; }
+                    )
                 }.bind(this));
 
-                seq.run();
+                chain.push(function(done) {
+                    this.notes_model.find(
+                        note.id,
+                        function (fetched) {
+                            Mojo.require(orig_modified != fetched.modified,
+                                "Fetched modification date should differ");
+                            done();
+                        },
+                        function() { throw "Note find failed"; }
+                    );
+                }.bind(this));
+
             }.bind(this));
 
-            main_seq.push(function(main_done) {
-                main_done();
+            chain.push(main_done);
+            chain.start();
+        },
+
+        /**
+         * Delete notes, and them ensure they're gone.
+         */
+        _deleteNotes: function (main_done) {
+            var chain = new Chain();
+
+            this.notes.each(function(note) {
+                var note_id = note.id;
+
+                chain.push(function(done) {
+                    this.notes_model.del(
+                        note,
+                        function() { done(); },
+                        function() { throw "Note delete failed"; }
+                    );
+                }.bind(this));
+
+                chain.push(function(done) {
+                    this.notes_model.find(
+                        note_id,
+                        function(fetched) { 
+                            Mojo.require(null === fetched,
+                                "Note should not be found");
+                            done();
+                        },
+                        function() { throw "Note find failed"; }
+                    );
+                }.bind(this));
+
             }.bind(this));
 
-            main_seq.start();
-
-            /*
-
-
-            // Delete all notes, assert that they're not found.
-            notes.each(function(note) {
-                this.notes_model.del(note);
-            }.bind(this));
-            notes.each(function(note) {
-                var result_note = this.notes_model.find(note.id);
-                Mojo.require(null === result_note,
-                    'Deleted note should not be found.');
-            }.bind(this));
-
-            return Mojo.Test.passed;
-            */
+            chain.push(main_done);
+            chain.start();
         },
 
         EOF:null
-    });
+    };
 
-}());
+}();
