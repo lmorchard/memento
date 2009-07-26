@@ -9,41 +9,58 @@ function NoteAssistant (note) {
 NoteAssistant.prototype = (function () {
 
     return {
-        setup: function () {
-            console.log('NOTE SETUP');
-            
-            $('header').update(this.note.name);
 
+        setup: function () {
+            
             this.controller.setupWidget(
-                "txt",
-                {
-                    multiline: true,
+                "name", {
+                    hintText: $L('Enter note name...'),
+                    multiline: false,
                     enterSubmits: false,
-                    focus: true
+                    focus: (!this.note.name),
+                    modelProperty: 'name'
                 },
-                {
-                    value: this.note.text
-                }
+                this.note
             );
 
-            $('txt').observe(Mojo.Event.propertyChange, 
-                function (ev) {
-                    this.note.text = ev.value;
-                    this.notes_model.save(this.note);
-                }.bind(this)
+            this.controller.setupWidget(
+                "text", {
+                    multiline: true,
+                    enterSubmits: false,
+                    focus: (!!this.note.name),
+                    modelProperty: 'text'
+                },
+                this.note
+            );
+            
+            ['name', 'text'].each(function(name) {
+                this.controller.get(name).observe(
+                    Mojo.Event.propertyChange, 
+                    this.saveChanges.bind(this)
+                );
+            }, this);
+
+        },
+
+        saveChanges: function() {
+            if (!this.note.name && !this.note.text) {
+                // Don't save changes to empty notes.
+                return;
+            }
+            this.notes_model.save(
+                this.note,
+                function(note) { }
             );
         },
 
         activate: function (event) {
-            console.log('NOTE ACTIVATE');
         },
 
         deactivate: function (event) {
-            console.log('NOTE DEACTRIVATE');
+            this.saveChanges();
         },
 
         cleanup: function (event) {
-            console.log('NOTE CLEANUP');
         }
 
     };

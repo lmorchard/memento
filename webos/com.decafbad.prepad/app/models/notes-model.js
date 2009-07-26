@@ -5,13 +5,16 @@
  */
 
 Note = Class.create({
-    initialize: function(data) {
-        if (!data) { return; }
+    
+    property_names: ['uuid', 'name', 'text', 'created', 'modified'],
 
-        ['id', 'name', 'text', 'created', 'modified']
-            .each(function(name) {
+    initialize: function(data) {
+        if (!data) data = {};
+
+        this.property_names.each(function(name) {
+            if (typeof data[name] != 'undefined')
                 this[name] = data[name];
-            }, this);
+        }, this);
 
         if (!this.created) {
             this.created = (new Date()).getTime();
@@ -25,7 +28,7 @@ Note = Class.create({
 
 NotesModel = (function() {
 
-    var DEFAULT_DEPOT = 'PrePadNotes';
+    var DEFAULT_DEPOT = 'PrePad_Data';
     var NOTES_BUCKET  = 'notes';
     var NOTES_FILTERS = ['name', 'text', 'created', 'modified'];
 
@@ -54,13 +57,13 @@ NotesModel = (function() {
         },
 
         save: function (note, on_success, on_fail) {
-            if (!note.id) {
-                note.id = Math.uuid();
+            if (!note.uuid) {
+                note.uuid = Math.uuid();
             }
             note.modified = (new Date()).getTime();
 
             this.depot.addSingle(
-                NOTES_BUCKET, note.id, note, NOTES_FILTERS,
+                NOTES_BUCKET, note.uuid, note, NOTES_FILTERS,
                 function() { on_success(note); },
                 on_fail
             );
@@ -77,9 +80,9 @@ NotesModel = (function() {
             );
         },
 
-        find: function (id, on_success, on_fail) {
+        find: function (uuid, on_success, on_fail) {
             this.depot.getSingle(
-                NOTES_BUCKET, id, 
+                NOTES_BUCKET, uuid, 
                 function (data) {
                     on_success(data);
                 },
@@ -89,7 +92,7 @@ NotesModel = (function() {
 
         del: function (note, on_success, on_fail) {
             this.depot.remove(
-                NOTES_BUCKET, note.id,
+                NOTES_BUCKET, note.uuid,
                 function (data) {
                     on_success(note);
                 },

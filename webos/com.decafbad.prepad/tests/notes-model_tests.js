@@ -32,7 +32,7 @@ NotesModelTests.prototype = function() {
                     name: name,
                     text: 'This is sample text for ' + name
                 };
-            }.bind(this));
+            }, this);
            
         },
 
@@ -43,6 +43,19 @@ NotesModelTests.prototype = function() {
             new Chain([
                 this._ensureEmpty.bind(this),
                 this._addNotes.bind(this),
+                this._deleteNotes.bind(this),
+                this._ensureEmpty.bind(this),
+                function() { recordResults(Mojo.Test.passed); }
+            ]).start();
+        },
+
+        /**
+         * Exercise basic add/delete.
+         */
+        testCreateAndAdd: function(recordResults) {
+            new Chain([
+                this._ensureEmpty.bind(this),
+                this._createAndAddNotes.bind(this),
                 this._deleteNotes.bind(this),
                 this._ensureEmpty.bind(this),
                 function() { recordResults(Mojo.Test.passed); }
@@ -113,10 +126,10 @@ NotesModelTests.prototype = function() {
 
                         // Retain the note just saved.
                         this.notes.push(note); 
-                        this.by_id[note.id] = note;
+                        this.by_id[note.uuid] = note;
 
                         // Ensure some properties were auto-set.
-                        ['id', 'created', 'modified'].each(function (name) {
+                        ['uuid', 'created', 'modified'].each(function (name) {
                             Mojo.require(
                                 (typeof note[name]) !== 'undefined',
                                 'Note ' + name + ' should be defined'
@@ -133,7 +146,49 @@ NotesModelTests.prototype = function() {
                     );
 
                 }.bind(this))
-            }.bind(this));
+            }, this);
+
+            chain.push(main_done);
+            chain.start();
+        },
+
+        /**
+          * Chain a series of note adds, asserting auto-defined 
+          * properties of each upon success.
+          */
+        _createAndAddNotes: function (main_done) {
+            var chain = new Chain();
+
+            this.test_data.each(function (data) {
+                chain.push(function (done) {
+
+                    var check_note = function (note) {
+
+                        // Retain the note just saved.
+                        this.notes.push(note); 
+                        this.by_id[note.uuid] = note;
+
+                        // Ensure some properties were auto-set.
+                        ['uuid', 'created', 'modified'].each(function (name) {
+                            Mojo.require(
+                                (typeof note[name]) !== 'undefined',
+                                'Note ' + name + ' should be defined'
+                            );
+                        }.bind(this));
+
+                        done();
+                    }.bind(this);
+
+                    var new_note = new Note(data);
+
+                    this.notes_model.save(
+                        new_note, 
+                        check_note,
+                        function() { throw "Note save failed"; }
+                    );
+
+                }.bind(this))
+            }, this);
 
             chain.push(main_done);
             chain.start();
@@ -145,14 +200,14 @@ NotesModelTests.prototype = function() {
         _checkSavedNotes: function (main_done) {
             var chain = new Chain();
             var prop_names = [
-                'id', 'name', 'text', 'created', 'modified'
+                'uuid', 'name', 'text', 'created', 'modified'
             ];
 
             this.notes.each(function (expected_note) {
                 chain.push(function (done) { 
 
-                    var check_note = function (result_note) {
-                        prop_names.each(function (name) {
+                    var check_note = function(result_note) {
+                        prop_names.each(function(name) {
                             Mojo.requireEqual(
                                 result_note[name], expected_note[name],
                                 'Note ' + name + ' should match'
@@ -162,13 +217,13 @@ NotesModelTests.prototype = function() {
                     }.bind(this)
 
                     this.notes_model.find(
-                        expected_note.id, 
+                        expected_note.uuid, 
                         check_note,
                         function() { throw "Note find failed"; }
                     );
 
                 }.bind(this))
-            }.bind(this));
+            }, this);
 
             chain.push(main_done);
             chain.start();
@@ -179,7 +234,7 @@ NotesModelTests.prototype = function() {
          */
         _checkMultipleSavedNotes: function (main_done) {
             var prop_names = [
-                'id', 'name', 'text', 'created', 'modified'
+                'uuid', 'name', 'text', 'created', 'modified'
             ];
 
             this.notes_model.findAll(
@@ -187,15 +242,15 @@ NotesModelTests.prototype = function() {
                 function(notes) {
                     notes.each(function(result) {
 
-                        var expected = this.by_id[result.id];
+                        var expected = this.by_id[result.uuid];
                         prop_names.each(function(name) {
                             Mojo.requireEqual(
                                 result[name], expected[name],
                                 'Note ' + name + ' should match'
                             );
-                        }.bind(this));
+                        }, this);
 
-                    }.bind(this));
+                    }, this);
                     main_done();
                 }.bind(this),
                 function() { throw "Note findAll failed"; }
@@ -233,14 +288,14 @@ NotesModelTests.prototype = function() {
                                 "Saved modification date should differ"
                             );
                             done();
-                        },
+                        }.bind(this),
                         function() { throw "Note save failed"; }
                     )
                 }.bind(this));
 
                 chain.push(function(done) {
                     this.notes_model.find(
-                        note.id,
+                        note.uuid,
                         function (fetched) {
                             Mojo.require(orig_modified != fetched.modified,
                                 "Fetched modification date should differ");
@@ -250,7 +305,7 @@ NotesModelTests.prototype = function() {
                     );
                 }.bind(this));
 
-            }.bind(this));
+            }, this);
 
             chain.push(main_done);
             chain.start();
@@ -263,7 +318,7 @@ NotesModelTests.prototype = function() {
             var chain = new Chain();
 
             this.notes.each(function(note) {
-                var note_id = note.id;
+                var note_id = note.uuid;
 
                 chain.push(function(done) {
                     this.notes_model.del(
@@ -285,7 +340,7 @@ NotesModelTests.prototype = function() {
                     );
                 }.bind(this));
 
-            }.bind(this));
+            }, this);
 
             chain.push(main_done);
             chain.start();
