@@ -1,12 +1,9 @@
 [
     {"source": "vendor\/Math.uuid.js"},
+    {"source": "vendor\/simpledateformat.js"},
     {"source": "libs\/chain.js"},
     {"source": "app\/models\/notes-model.js"},
     {"source": "app\/assistants\/stage-assistant.js"},
-    {
-        "scenes": "test",
-        "source": "app\/assistants\/test-assistant.js"
-    },
     {
         "scenes": "home",
         "source": "app\/assistants\/home-assistant.js"

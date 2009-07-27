@@ -8,6 +8,21 @@
     padding-left: 10px;
 }
 
+.note-scene {
+}
+
+.home-scene #notes-list .palm-group .palm-list .note-item .title {
+    padding: 2px 0px 0px 30px;
+    background: transparent url(../images/page_white_text.png) no-repeat 8px 10px;
+}
+.home-scene #notes-list .palm-group .palm-list .note-item .title .truncating-text {
+    height: auto;
+    min-height: 0;
+}
+.home-scene #notes-list .palm-group .palm-list .note-item .preview {
+    padding: 0 0 0 30px;
+}
+
 /*
 .home-scene #notes-list .palm-list .palm-group.unlabeled {
     border: none;

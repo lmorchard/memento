@@ -32,7 +32,7 @@ NoteAssistant.prototype = (function () {
                 },
                 this.note
             );
-            
+
             ['name', 'text'].each(function(name) {
                 this.controller.get(name).observe(
                     Mojo.Event.propertyChange, 
@@ -41,7 +41,7 @@ NoteAssistant.prototype = (function () {
             }, this);
 
         },
-
+        
         saveChanges: function() {
             if (!this.note.name && !this.note.text) {
                 // Don't save changes to empty notes.
@@ -57,7 +57,6 @@ NoteAssistant.prototype = (function () {
         },
 
         deactivate: function (event) {
-            this.saveChanges();
         },
 
         cleanup: function (event) {

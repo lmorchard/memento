@@ -26,7 +26,11 @@ HomeAssistant.prototype = (function () {
                     itemTemplate:  'home/list-item',
                     listTemplate:  'home/list-container',
                     emptyTemplate: 'home/list-empty',
+                    fixedHeightItems: false,
                     filterFunction: this.filterNotes.bind(this),
+                    formatters: {
+                        modified: this._dateFormatter
+                    }
                 },
                 this.list_model
             );
@@ -47,6 +51,14 @@ HomeAssistant.prototype = (function () {
                 ]}
             );
 
+        },
+
+        _dateFormatter: function(date, model) {
+            var dt = new Date(date),
+                now = new Date();
+            if (dt.toDateString() === now.toDateString())
+                return "Today, " + new SimpleDateFormat("h:mm a").format(dt);
+            return new SimpleDateFormat("MMMM d, yyyy h:mm a").format(dt);
         },
 
         openNote: function(note) {
@@ -75,9 +87,13 @@ HomeAssistant.prototype = (function () {
                 null, null, null,
 
                 function(notes) {
-                    this.notes = notes;
-                    this.list_model.items = this.notes;
-                    this.refreshList();
+                    try {
+                        this.notes = notes;
+                        this.list_model.items = this.notes;
+                        this.refreshList();
+                    } catch (e) {
+                        Mojo.Log.logException(e);
+                    }
                 }.bind(this),
                 
                 function() { 
