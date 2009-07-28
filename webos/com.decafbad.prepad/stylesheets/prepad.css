@@ -13,7 +13,7 @@
 
 .home-scene #notes-list .palm-group .palm-list .note-item .title {
     padding: 2px 0px 0px 30px;
-    background: transparent url(../images/page_white_text.png) no-repeat 8px 10px;
+    background: transparent url(../images/page_white_text.png) no-repeat 8px 8px;
 }
 .home-scene #notes-list .palm-group .palm-list .note-item .title .truncating-text {
     height: auto;
@@ -21,6 +21,13 @@
 }
 .home-scene #notes-list .palm-group .palm-list .note-item .preview {
     padding: 0 0 0 30px;
+}
+
+.note-scene #main.palm-hasheader {
+    margin-top: 46px;
+}
+.note-scene #text {
+    padding: 0 10px 0 10px;
 }
 
 /*
