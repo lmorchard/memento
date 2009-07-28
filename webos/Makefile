@@ -1,11 +1,11 @@
 ###########################################################################
-# PrePad webOS application 
+# Memento webOS application 
 #
 # l.m.orchard@pobox.com 
 # http://decafbad.com
 ###########################################################################
 
-APPID=com.decafbad.prepad
+APPID=com.decafbad.memento
 VERSION=0.0.1
 
 IPK=$(APPID)_$(VERSION)_all.ipk

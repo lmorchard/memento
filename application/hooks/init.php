@@ -2,7 +2,7 @@
 /**
  * Initialization hook
  */
-class PrePad_Init {
+class Memento_Init {
 
     /**
      * Initialize and wire up event responders.
@@ -14,4 +14,4 @@ class PrePad_Init {
     }
 
 }
-Event::add('system.ready', array('PrePad_Init', 'init'));
+Event::add('system.ready', array('Memento_Init', 'init'));

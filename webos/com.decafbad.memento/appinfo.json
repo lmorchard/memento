@@ -1,9 +1,9 @@
 {
-	"id": "com.decafbad.prepad",
+	"id": "com.decafbad.memento",
 	"version": "0.0.1",
 	"vendor": "0xDECAFBAD",
 	"type": "web",
 	"main": "index.html",
-	"title": "PrePad",
+	"title": "Memento",
 	"icon": "icon.png"
 }

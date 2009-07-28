@@ -1,0 +1,41 @@
+.main_view #editor .header {
+    position: absolute;
+    left: 0; top: 0;
+    width: 100%;
+    background-color: #ddd;
+}
+.main_view .mobile #editor .header {
+    height: 2em;
+}
+.main_view #editor .header h1 {
+    padding: 0; 
+    margin: 0;
+    font-size: 1.25em;
+}
+.main_view .mobile #editor .header h1 {
+    text-align: center;
+}
+.main_view #editor #content {
+    position: absolute;
+    display: block;
+    left: 4px;
+    top: 2.25em;
+    width: 310px;
+    height: 345px;
+}
+.main_view #editor .save {
+}
+.main_view #editor .footer {
+    position: absolute;
+    left: 0; bottom: 10px;
+    width: 100%;
+    background-color: #ddd;
+}
+.main_view #editor .footer .back {
+    margin-left: 2em;
+}
+.main_view .mobile #editor .footer {
+    position: absolute;
+    left: 0; top: 380px;
+    text-align: center;
+}

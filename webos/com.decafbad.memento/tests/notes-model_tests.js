@@ -18,7 +18,7 @@ NotesModelTests.prototype = function() {
             this.name = "Notes Model";
             this.tickleFunction = tickleFunction;
 
-            this.notes_model = new NotesModel('PrePadNotes_Test');
+            this.notes_model = new NotesModel('Memento_Notes_Test');
             this.notes_model.reset();
 
             this.notes = [];

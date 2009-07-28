@@ -28,7 +28,7 @@ Note = Class.create({
 
 NotesModel = (function() {
 
-    var DEFAULT_DEPOT = 'PrePad_Data';
+    var DEFAULT_DEPOT = 'Memento_Data';
     var NOTES_BUCKET  = 'notes';
     var NOTES_FILTERS = ['name', 'text', 'created', 'modified'];
 

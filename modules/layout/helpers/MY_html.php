@@ -36,10 +36,9 @@ class html extends html_Core
      */
     public static function escape_array($arr)
     {
-        arr::map_recursive(
+        return arr::map_recursive(
             array(get_class(), 'inplace_specialchars'), $arr
         );
-        return $arr;
     }
 
     /**
@@ -52,8 +51,7 @@ class html extends html_Core
      */
     public static function inplace_specialchars(&$str, $double_encode=TRUE)
     {
-        $str = html::specialchars($str, $double_encode);
-        return $str;
+        return $str = html::specialchars($str, $double_encode);
     }
 
     /**
@@ -64,10 +62,9 @@ class html extends html_Core
      */
     public static function urlencode_array($arr)
     {
-        arr::map_recursive(
+        return arr::map_recursive(
             array(get_class(), 'inplace_urlencode'), $arr
         );
-        return $arr;
     }
 
     /**
