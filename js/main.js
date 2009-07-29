@@ -17,7 +17,7 @@ var Main = function() {
         },
 
         onReady: function() {
-            if ($$('.main_view').length) {
+            if ($$('.main_editform').length) {
                 
                 if (!this.IS_MOBILE) {
                     this.adjustEditorDimensions.delay(250);
@@ -33,7 +33,7 @@ var Main = function() {
         },
 
         onResize: function(ev) {
-            if ($$('.main_view').length) {
+            if ($$('.main_editform').length) {
                 if (!this.IS_MOBILE) {
                     this.adjustEditorDimensions.delay(250);
                 }
@@ -49,10 +49,10 @@ var Main = function() {
                 left:   (4 + 'px'),
                 top:    (4 + hd_size.bottom) + 'px',
                 width:  (pg_size.x - 10) + 'px',
-                height: (pg_size.y - hd_size.height - ft_size.height - 10) + 'px',
+                height: (pg_size.y - hd_size.height - ft_size.height - 20) + 'px',
             };
             
-            $('content').setStyles(dims);
+            $('text').setStyles(dims);
         },
 
         autoSave: function() {

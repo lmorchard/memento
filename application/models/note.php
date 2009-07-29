@@ -10,24 +10,34 @@ class Note_Model extends Model
 {
     public $base_dir = null;
 
-    public $loaded  = false;
-    public $name    = null;
+    public $loaded   = false;
+
+    public $uuid     = null;
+    public $name     = null;
+    public $text     = null;
+    public $etag     = null;
+    public $created  = null;
+    public $modified = null;
 
     public $table_columns = array(
-        'name'    => array('type' => 'string'),
-        'content' => array('type' => 'string'),
+        'uuid'     => array('type' => 'string'),
+        'name'     => array('type' => 'string'),
+        'text'     => array('type' => 'string'),
+        'etag'     => array('type' => 'string'),
+        'created'  => array('type' => 'string'),
+        'modified' => array('type' => 'string'),
     );
 
-    public function __construct($name=null)
+    public function __construct($uuid=null)
     {
         // parent::__construct(); // No need for DB yet?
         $this->base_dir = APPPATH . 'data/notes';
-        if (null !== $name) $this->find($name);
+        if (null !== $uuid) $this->find($uuid);
     }
 
     private function _filename()
     {
-        $fn = "{$this->base_dir}/{$this->name}.txt";
+        $fn = "{$this->base_dir}/{$this->uuid}.txt";
         return $fn;
     }
 
@@ -43,23 +53,46 @@ class Note_Model extends Model
         return $notes;
     }
 
-    public function find($name)
+    public function find($uuid)
     {
-        $this->name = $name;
+        $this->uuid = $uuid;
         if (is_file($this->_filename())) {
+            $data = json_decode(file_get_contents($this->_filename(), true));
+            foreach ($data as $name=>$value) {
+                $this->{$name} = $value;
+            }
+            $this->etag   = $this->etag();
             $this->loaded = true;
         } else {
-            $this->name = null;
+            $this->uuid   = null;
+            $this->loaded = false;
         }
         return $this;
     }
 
     public function save()
     {
-        file_put_contents($this->_filename(), $this->content);
+        if (empty($this->uuid)) 
+            $this->uuid = uuid::uuid();
+
+        // Using microseconds to stay friendly with JS times.
+        $now = number_format(( time() + microtime() ) * 1000, 0, '.', '');
+        if (empty($this->created)) $this->created = $now;
+        $this->modified = $now;
+
+        $data = $this->as_array();
+
+        $out = json_encode($data);
+        file_put_contents($this->_filename(), $out);
         chmod($this->_filename(), 0664);
         Kohana::log('debug', 'saved ' . $this->_filename());
         $this->loaded = true;
+    }
+
+    public function delete()
+    {
+        if (!$this->loaded) return;
+        return unlink($this->_filename());
     }
 
     public function as_array()
@@ -68,25 +101,17 @@ class Note_Model extends Model
         foreach ($this->table_columns as $name=>$meta) {
             $arr[$name] = $this->{$name};
         }
+        $arr['etag'] = $this->etag();
         return $arr;
     }
 
-    public function __isset($name)
-    {
-        if ('content' === $name && $this->loaded) {
-            return true; 
+    public function etag() {
+        $vals = array();
+        foreach ($this->table_columns as $name=>$meta) {
+            if ($name=='etag') continue;
+            $vals[] = $this->{$name};
         }
-        return isset($this->{$name});
-    }
-
-    public function __get($name)
-    {
-        if ('content' === $name) {
-            // Lazy load the content on-demand.
-            return $this->content = 
-                file_get_contents($this->_filename());
-        }
-        return $this->{$name};
+        return md5(join("---\n", $vals));
     }
 
 }

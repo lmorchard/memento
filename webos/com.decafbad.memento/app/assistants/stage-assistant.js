@@ -1,6 +1,16 @@
 /**
  *
  */
+appMenuModel = {
+    visible: true,
+    items: [
+        Mojo.Menu.editItem,
+        { label: "Preferences", command: 'AppPreferences' },
+        { label: "About", command: 'AppAbout' },
+        //{ label: "Help", command: 'AppHelp' }
+    ]
+};
+
 function StageAssistant() {
 }
 
@@ -41,6 +51,42 @@ StageAssistant.prototype = (function () {
                 this.controller.pushScene('home');
 
             }
+        },
+
+        handleCommand: function(event) {
+
+            Mojo.log("HANDLE COMMAND");
+
+            var currentScene = Mojo.Controller.stageController.activeScene();
+
+            if (event.type == Mojo.Event.command) {
+                switch(event.command) {
+
+                    case 'AppAbout':
+                        currentScene.showAlertDialog({
+                            onChoose: function(value) {},
+                            title: 
+                                $L("Memento - v0.1"),
+                            message: 
+                                $L("Copyright 2008-2009, Leslie Michael Orchard"),
+                            choices: [
+                                {label:$L("OK"), value:""}
+                            ]
+                        });
+                        break;
+
+                    case 'AppPreferences':
+                        Mojo.Controller.stageController
+                            .pushScene("preferences", this);
+                        break;
+
+                    case 'do-help':
+                        Mojo.Log.info("...........",
+                            "Help selected from menu, not currently available.");
+                        break;
+	            }
+            }
+            
         }
 
     };

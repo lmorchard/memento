@@ -1,21 +1,21 @@
-.main_view #editor .header {
+.main_editform #editor .header {
     position: absolute;
     left: 0; top: 0;
     width: 100%;
     background-color: #ddd;
 }
-.main_view .mobile #editor .header {
+.main_editform .mobile #editor .header {
     height: 2em;
 }
-.main_view #editor .header h1 {
+.main_editform #editor .header h1 {
     padding: 0; 
     margin: 0;
     font-size: 1.25em;
 }
-.main_view .mobile #editor .header h1 {
+.main_editform .mobile #editor .header h1 {
     text-align: center;
 }
-.main_view #editor #content {
+.main_editform #editor #text {
     position: absolute;
     display: block;
     left: 4px;
@@ -23,18 +23,18 @@
     width: 310px;
     height: 345px;
 }
-.main_view #editor .save {
+.main_editform #editor .save {
 }
-.main_view #editor .footer {
+.main_editform #editor .footer {
     position: absolute;
     left: 0; bottom: 10px;
     width: 100%;
     background-color: #ddd;
 }
-.main_view #editor .footer .back {
+.main_editform #editor .footer .back {
     margin-left: 2em;
 }
-.main_view .mobile #editor .footer {
+.main_editform .mobile #editor .footer {
     position: absolute;
     left: 0; top: 380px;
     text-align: center;

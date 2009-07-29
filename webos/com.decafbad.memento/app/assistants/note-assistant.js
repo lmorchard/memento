@@ -11,7 +11,10 @@ NoteAssistant.prototype = (function () {
     return {
 
         setup: function () {
-            
+
+            this.controller.setupWidget(Mojo.Menu.appMenu, 
+                {omitDefaultItems: true}, appMenuModel);
+
             this.controller.setupWidget(
                 "name", {
                     hintText: $L('Enter note name...'),
@@ -35,11 +38,19 @@ NoteAssistant.prototype = (function () {
 
             ['name', 'text'].each(function(name) {
                 this.controller.get(name).observe(
-                    Mojo.Event.propertyChange, 
-                    this.saveChanges.bind(this)
+                    Mojo.Event.propertyChange, this.saveChanges.bind(this)
                 );
             }, this);
 
+            this.controller.get('mojo-scene-note-scene-scroller').observe(
+                Mojo.Event.tap, this.focusText.bind(this)
+            );
+
+        },
+
+        focusText: function(ev) {
+            Mojo.log("FOCUS TEXT");
+            this.controller.get('text').focus();
         },
         
         saveChanges: function() {

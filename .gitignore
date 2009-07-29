@@ -12,6 +12,7 @@ Thumbs.db
 xfers/
 application/cache/
 application/logs/
+application/data/
 application/tests/log/
 docs/api/
 logs/

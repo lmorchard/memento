@@ -8,9 +8,13 @@
     padding-left: 10px;
 }
 
-.note-scene {
+.home-scene .palm-header {
+    text-align: left;
 }
-
+.home-scene .palm-header .header-text {
+    background: transparent url(../images/page_white_stack.png) no-repeat 0px 15px;
+    padding-left: 22px;
+}
 .home-scene #notes-list .palm-group .palm-list .note-item .title {
     padding: 2px 0px 0px 30px;
     background: transparent url(../images/page_white_text.png) no-repeat 8px 8px;
@@ -22,12 +26,26 @@
 .home-scene #notes-list .palm-group .palm-list .note-item .preview {
     padding: 0 0 0 30px;
 }
+.home-scene .palm-menu-icon.new-note {
+    background: transparent url(../images/page_white_add.png) no-repeat 8px 8px;
+}
 
+.note-scene .palm-header {
+    text-align: left;
+}
+.note-scene #name {
+    background: transparent url(../images/page_white_text.png) no-repeat 0px 16px;
+    padding-left: 22px;
+}
+.note-scene #name input {
+    margin-top: 9px;
+}
 .note-scene #main.palm-hasheader {
     margin-top: 46px;
 }
 .note-scene #text {
     padding: 0 10px 0 10px;
+    min-height: 400px;
 }
 
 /*

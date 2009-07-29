@@ -4,7 +4,7 @@
  * then a full URL will be used, eg: http://localhost/kohana/. If it only includes
  * the path, and a site_protocol is specified, the domain will be auto-detected.
  */
-$config['site_domain'] = '/~lorchard/memento/';
+$config['site_domain'] = '192.168.123.62/~lorchard/memento/';
 
 /**
  * Force a default protocol to be used by the site. If no site_protocol is
@@ -18,7 +18,7 @@ $config['site_protocol'] = '';
  *
  * This can be removed by using URL rewriting.
  */
-$config['index_page'] = 'index.php';
+$config['index_page'] = '';
 
 /**
  * Fake file extension that will be added to all generated URLs. Example: .html
