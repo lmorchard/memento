@@ -27,11 +27,20 @@ class Main_Controller extends Local_Controller
             if ('html' == $format) {
                 // Redirect to an edit form.
                 return url::redirect('notes/' . $note->uuid . ';edit');
+            } else if ('json' == $format) {
+                // Redirect to the resource itself with a 201 code.
+                header("HTTP/1.0 201 Created");
+                return url::redirect('notes/' . $note->uuid . '?format=json');
             } else {
                 // Redirect to the resource itself with a 201 code.
                 header("HTTP/1.0 201 Created");
                 return url::redirect('notes/' . $note->uuid);
             }
+        } else if ('delete' == request::method()) {
+            Kohana::log('debug', "Deleting all!");
+            $this->note_model->delete_all(); 
+            header('HTTP/1.0 410 Gone');
+            exit;
         }
 
         $this->view->notes = $notes;

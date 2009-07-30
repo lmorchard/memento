@@ -33,8 +33,7 @@ if ($is_mobile) {
             <?=$content?>
         </div>
 
-        <script type="text/javascript" src="<?=url::base()?>js/mootools-1.2.3-core-yc.js"></script>
-        <script type="text/javascript" src="<?=url::base()?>js/mootools-1.2.3.1-more.js"></script>
+        <script type="text/javascript" src="<?=url::base()?>js/prototype-1.6.0.3.js"></script>
         <script type="text/javascript" src="<?=url::base()?>js/main.js"></script>
         <script type="text/javascript">
             Main.IS_MOBILE = <?= json_encode($is_mobile) ?>;

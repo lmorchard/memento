@@ -28,7 +28,7 @@ class Note_Model extends Model
         'modified' => array('type' => 'string'),
     );
 
-    public function __construct($uuid=null)
+    public function __construct($uuid=null, $base_dir=null)
     {
         // parent::__construct(); // No need for DB yet?
         $this->base_dir = APPPATH . 'data/notes';
@@ -85,7 +85,6 @@ class Note_Model extends Model
         $out = json_encode($data);
         file_put_contents($this->_filename(), $out);
         chmod($this->_filename(), 0664);
-        Kohana::log('debug', 'saved ' . $this->_filename());
         $this->loaded = true;
     }
 
@@ -93,6 +92,17 @@ class Note_Model extends Model
     {
         if (!$this->loaded) return;
         return unlink($this->_filename());
+    }
+
+    public function delete_all()
+    {
+        if (Kohana::config('notes.enable_delete_all') !== true) {
+            throw new Exception('delete_all not enabled');
+        }
+        $all = $this->find_all();
+        foreach ($all as $note) {
+            $note->delete();
+        }
     }
 
     public function as_array()

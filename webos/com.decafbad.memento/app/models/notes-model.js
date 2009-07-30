@@ -3,7 +3,6 @@
  *
  * @author l.m.orchard@pobox.com
  */
-
 Note = Class.create({
     
     property_names: ['uuid', 'name', 'text', 'created', 'modified'],

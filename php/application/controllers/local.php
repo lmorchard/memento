@@ -9,6 +9,13 @@ class Local_Controller extends Layout_Controller
     {
         parent::__construct();
 
+        // Handle the _method parameter from AJAX calls to tweak HTTP method.
+        $force_method = $this->input->post('_method');
+        if (!empty($force_method)) {
+            $_SERVER['REQUEST_METHOD'] = strtoupper($force_method);
+            Kohana::log('debug', 'Forced HTTP method ' . $force_method);
+        }
+
         Event::add('system.403', array($this, 'show_403'));
     }
 

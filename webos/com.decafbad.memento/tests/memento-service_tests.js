@@ -1,24 +1,26 @@
 /**
- * Tests for NotesModel
+ * Tests for MementoService
  *
  * @author l.m.orchard@pobox.com
- * @see NotesModel
+ * @see MementoService
  */
-function NotesModelTests(tickleFunction) {
+function MementoServiceTests(tickleFunction) {
     this.initialize(tickleFunction);
 }
-NotesModelTests.prototype = function() {
+MementoServiceTests.prototype = function() {
         
     return {
+        timeoutInterval: 5000,
 
         /**
          * Test setup, run before execution of each test.
          */
         initialize: function (tickleFunction) {
             this.tickleFunction = tickleFunction;
-
-            this.notes_model = new NotesModel('Memento_Notes_Test');
-            this.notes_model.reset();
+            
+            this.memento_service = new MementoService({
+                service_url: 'http://192.168.123.62/~lorchard/memento/'
+            });
 
             this.notes = [];
             this.by_id = {};
@@ -40,23 +42,12 @@ NotesModelTests.prototype = function() {
          */
         testAddDelete: function(recordResults) {
             new Chain([
+                this._deleteNotes.bind(this),
                 this._ensureEmpty.bind(this),
                 this._addNotes.bind(this),
                 this._deleteNotes.bind(this),
                 this._ensureEmpty.bind(this),
-                function() { recordResults(Mojo.Test.passed); }
-            ]).start();
-        },
-
-        /**
-         * Exercise basic add/delete.
-         */
-        testCreateAndAdd: function(recordResults) {
-            new Chain([
-                this._ensureEmpty.bind(this),
-                this._createAndAddNotes.bind(this),
                 this._deleteNotes.bind(this),
-                this._ensureEmpty.bind(this),
                 function() { recordResults(Mojo.Test.passed); }
             ]).start();
         },
@@ -66,30 +57,10 @@ NotesModelTests.prototype = function() {
          */
         testFind: function(recordResults) {
             new Chain([
+                this._deleteNotes.bind(this),
                 this._addNotes.bind(this),
                 this._checkSavedNotes.bind(this),
-                function() { recordResults(Mojo.Test.passed); }
-            ]).start();
-        },
-
-        /**
-         * Exercise finding multiple notes by filter.
-         */
-        testFindAll: function(recordResults) {
-            new Chain([
-                this._addNotes.bind(this),
-                this._checkMultipleSavedNotes.bind(this),
-                function() { recordResults(Mojo.Test.passed); }
-            ]).start();
-        },
-
-        /**
-         * Exercise Modification date updates on save.
-         */
-        testModificationDates: function (recordResults) {
-            new Chain([
-                this._addNotes.bind(this),
-                this._checkModificationDates.bind(this),
+                this._deleteNotes.bind(this),
                 function() { recordResults(Mojo.Test.passed); }
             ]).start();
         },
@@ -97,17 +68,15 @@ NotesModelTests.prototype = function() {
         /**
          * Ensure that there are no saved notes at first.
          */
-        _ensureEmpty: function (main_done) {
-            this.notes_model.findAll(
-                null, null, null,
+        _ensureEmpty: function(main_done) {
+            this.memento_service.findAllNotes(
                 function(notes) {
-                    Mojo.require(
-                        0 == notes.length, 
-                        "Notes should be empty at first"
+                    Mojo.requireEqual(
+                        notes.length, 0, "Notes should be empty."
                     );
                     main_done();
                 }.bind(this),
-                function() { throw "Note findAll failed"; }
+                function() { throw "findAllNotes failure" }
             );
         },
 
@@ -115,7 +84,7 @@ NotesModelTests.prototype = function() {
           * Chain a series of note adds, asserting auto-defined 
           * properties of each upon success.
           */
-        _addNotes: function (main_done) {
+        _addNotes: function(main_done) {
             var chain = new Chain();
 
             this.test_data.each(function (data) {
@@ -139,53 +108,9 @@ NotesModelTests.prototype = function() {
                     }.bind(this);
 
                     this.tickleFunction();
-                    this.notes_model.add(
-                        data, 
-                        check_note,
-                        function() { throw "Note add failed"; }
-                    );
 
-                }.bind(this))
-            }, this);
-
-            chain.push(main_done);
-            chain.start();
-        },
-
-        /**
-          * Chain a series of note adds, asserting auto-defined 
-          * properties of each upon success.
-          */
-        _createAndAddNotes: function (main_done) {
-            var chain = new Chain();
-
-            this.test_data.each(function (data) {
-                chain.push(function (done) {
-
-                    var check_note = function (note) {
-
-                        // Retain the note just saved.
-                        this.notes.push(note); 
-                        this.by_id[note.uuid] = note;
-
-                        // Ensure some properties were auto-set.
-                        ['uuid', 'created', 'modified'].each(function (name) {
-                            Mojo.require(
-                                (typeof note[name]) !== 'undefined',
-                                'Note ' + name + ' should be defined'
-                            );
-                        }.bind(this));
-
-                        done();
-                    }.bind(this);
-
-                    var new_note = new Note(data);
-
-                    this.tickleFunction();
-                    this.notes_model.save(
-                        new_note, 
-                        check_note,
-                        function() { throw "Note save failed"; }
+                    this.memento_service.addNote(
+                        data, check_note, function() { throw "Note add failed"; }
                     );
 
                 }.bind(this))
@@ -218,9 +143,9 @@ NotesModelTests.prototype = function() {
                     }.bind(this)
 
                     this.tickleFunction();
-                    this.notes_model.find(
-                        expected_note.uuid, 
-                        check_note,
+
+                    this.memento_service.findNote(
+                        expected_note.uuid, check_note,
                         function() { throw "Note find failed"; }
                     );
 
@@ -239,12 +164,12 @@ NotesModelTests.prototype = function() {
                 'uuid', 'name', 'text', 'created', 'modified'
             ];
 
+            this.tickleFunction();
+
             this.notes_model.findAll(
                 null, null, null,
                 function(notes) {
                     notes.each(function(result) {
-
-                        this.tickleFunction();
 
                         var expected = this.by_id[result.uuid];
                         prop_names.each(function(name) {
@@ -272,7 +197,6 @@ NotesModelTests.prototype = function() {
                 stop = time() + 500;
             while (time() < stop) {  }
                 
-            // Still alive here, by the way.
             this.tickleFunction() ;
 
             var chain = new Chain();
@@ -285,6 +209,7 @@ NotesModelTests.prototype = function() {
                     note.text = 'Changed note ' + note.name;
 
                     this.tickleFunction();
+
                     this.notes_model.save(
                         note, 
                         function(saved) {
@@ -300,6 +225,7 @@ NotesModelTests.prototype = function() {
 
                 chain.push(function(done) {
                     this.tickleFunction();
+
                     this.notes_model.find(
                         note.uuid,
                         function (fetched) {
@@ -320,41 +246,12 @@ NotesModelTests.prototype = function() {
         /**
          * Delete notes, and them ensure they're gone.
          */
-        _deleteNotes: function (main_done) {
-            var chain = new Chain();
-
-            this.notes.each(function(note) {
-                var note_id = note.uuid;
-
-                chain.push(function(done) {
-                    this.tickleFunction();
-                    this.notes_model.del(
-                        note,
-                        function() { done(); },
-                        function() { throw "Note delete failed"; }
-                    );
-                }.bind(this));
-
-                chain.push(function(done) {
-                    this.tickleFunction();
-                    this.notes_model.find(
-                        note_id,
-                        function(fetched) { 
-                            Mojo.require(null === fetched,
-                                "Note should not be found");
-                            done();
-                        },
-                        function() { throw "Note find failed"; }
-                    );
-                }.bind(this));
-
-            }, this);
-
-            chain.push(main_done);
-            chain.start();
+        _deleteNotes: function(main_done) {
+            this.memento_service.deleteAllNotes(
+                main_done, function() { throw "deleteAllNotes failure" }
+            );
         },
 
         EOF:null
     };
-
 }();

@@ -1,8 +1,4 @@
 [
-    {"source": "vendor\/Math.uuid.js"},
-    {"source": "vendor\/simpledateformat.js"},
-    {"source": "libs\/chain.js"},
-    {"source": "app\/models\/notes-model.js"},
     {"source": "app\/assistants\/stage-assistant.js"},
     {
         "scenes": "home",

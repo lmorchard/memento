@@ -1,5 +1,10 @@
 [
 	{
+		"title": "Memento Service Tests",
+		"source": "tests/memento-service_tests.js",
+		"testFunction": "MementoServiceTests"
+	},
+	{
 		"title": "Notes Model Tests",
 		"source": "tests/notes-model_tests.js",
 		"testFunction": "NotesModelTests"

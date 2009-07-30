@@ -1,6 +1,5 @@
 /**
  * Main JS enhancements for browser
- */
 var Main = function() {
 
     return {
@@ -84,3 +83,4 @@ var Main = function() {
     };
 
 }().init();
+ */
