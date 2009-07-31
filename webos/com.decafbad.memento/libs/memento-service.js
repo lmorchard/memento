@@ -39,7 +39,7 @@ MementoService.prototype = function() {
         },
 
         findNote: function(uuid, on_success, on_failure) {
-            var url = this.options.service_url + '/notes/' + uuid;
+            var url = this.options.service_url + 'notes/' + uuid;
             new Ajax.JSONRequest(url, {
                 method: 'GET',
                 onSuccess: on_success, onFailure: on_failure
@@ -55,7 +55,7 @@ MementoService.prototype = function() {
         },
 
         saveNote: function(data, on_success, on_failure) {
-            var url = this.options.service_url + '/notes/'+ data.uuid;
+            var url = this.options.service_url + 'notes/' + data.uuid;
             new Ajax.JSONRequest(url, {
                 method: 'PUT', postBody: data,
                 onSuccess: on_success, onFailure: on_failure

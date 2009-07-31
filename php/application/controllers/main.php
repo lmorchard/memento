@@ -100,6 +100,9 @@ class Main_Controller extends Layout_Controller
     public function view($uuid)
     {
         $note = $this->note_model->find($uuid);
+        if (!$note->loaded) {
+            return Event::run('system.404');
+        }
 
         if ('delete' == request::method()) {
             $note->delete(); 
@@ -188,11 +191,13 @@ class Main_Controller extends Layout_Controller
             }
         }
 
+        /*
         if (!empty($params['uuid'])) {
             if (!preg_match('/^[0-9a-z\-]+$/', $params['uuid'])) {
                 $params['uuid'] = null;
             }
         }
+         */
 
         return $params;
     }

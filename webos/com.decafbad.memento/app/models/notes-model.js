@@ -44,6 +44,9 @@ NotesModel = (function() {
                 filters: NOTES_FILTERS
             }, on_success, on_fail);
 
+            this.service = new MementoService({
+            });
+
         },
 
         reset: function (on_success, on_fail) {
@@ -65,6 +68,19 @@ NotesModel = (function() {
                 NOTES_BUCKET, note.uuid, note, NOTES_FILTERS,
                 function() { on_success(note); },
                 on_fail
+            );
+
+            // TODO: This is just a crappy hack to see that the service is
+            // working
+            this.service.saveNote(
+                note,
+                function(saved, req) { 
+                }.bind(this),
+                function(json, req) {
+                    if ('404' == req.status) {
+                        this.service.addNote(note);
+                    }
+                }.bind(this)
             );
 
             return note;

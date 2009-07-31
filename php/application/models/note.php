@@ -55,6 +55,7 @@ class Note_Model extends Model
 
     public function find($uuid)
     {
+        $uuid = strtolower($uuid);
         $this->uuid = $uuid;
         if (is_file($this->_filename())) {
             $data = json_decode(file_get_contents($this->_filename(), true));
@@ -74,6 +75,8 @@ class Note_Model extends Model
     {
         if (empty($this->uuid)) 
             $this->uuid = uuid::uuid();
+
+        $this->uuid = strtolower($this->uuid);
 
         // Using microseconds to stay friendly with JS times.
         $now = number_format(( time() + microtime() ) * 1000, 0, '.', '');
