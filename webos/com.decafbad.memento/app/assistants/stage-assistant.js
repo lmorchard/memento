@@ -43,8 +43,6 @@ StageAssistant.prototype = (function () {
 
         handleCommand: function(event) {
 
-            Mojo.log("HANDLE COMMAND");
-
             var currentScene = Mojo.Controller.stageController.activeScene();
 
             if (event.type == Mojo.Event.command) {
