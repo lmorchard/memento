@@ -20,9 +20,11 @@ Have fun!  Details will eventually emerge.
 Still thinking about this.  
 
 I've got a notion it would be nice to sell the app for a couple of bucks once
-it's production quality, while still keeping it open source.  If you go through
-the trouble to install the SDK, grab the source, and install it - kudos to you,
-and please send patches.  If you just want a notepad app, spend a couple of
-bucks and save yourself some time.
+it's production quality, while still keeping it Open Source.  Maybe charge 
+a buck a year for "cloud" hosting, too.
+
+If you go through the trouble to install the Palm SDK, grab the source, package
+and install it - kudos to you, please send patches.  If you just want a notepad
+app, spend a couple of bucks and save yourself some time.
 
 But, I'm not there yet.
