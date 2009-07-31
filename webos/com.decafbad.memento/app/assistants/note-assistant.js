@@ -42,10 +42,6 @@ NoteAssistant.prototype = (function () {
                 );
             }, this);
 
-            this.controller.get('mojo-scene-note-scene-scroller').observe(
-                Mojo.Event.tap, this.focusText.bind(this)
-            );
-
         },
 
         focusText: function(ev) {
