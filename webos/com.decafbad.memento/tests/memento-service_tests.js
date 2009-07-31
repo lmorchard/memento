@@ -47,7 +47,6 @@ MementoServiceTests.prototype = function() {
                 this._addNotes.bind(this),
                 this._deleteNotes.bind(this),
                 this._ensureEmpty.bind(this),
-                this._deleteNotes.bind(this),
                 function() { recordResults(Mojo.Test.passed); }
             ]).start();
         },
@@ -60,7 +59,30 @@ MementoServiceTests.prototype = function() {
                 this._deleteNotes.bind(this),
                 this._addNotes.bind(this),
                 this._checkSavedNotes.bind(this),
+                function() { recordResults(Mojo.Test.passed); }
+            ]).start();
+        },
+
+        /**
+         * Exercise finding multiple notes by filter.
+         */
+        testFindAll: function(recordResults) {
+            new Chain([
                 this._deleteNotes.bind(this),
+                this._addNotes.bind(this),
+                this._checkMultipleSavedNotes.bind(this),
+                function() { recordResults(Mojo.Test.passed); }
+            ]).start();
+        },
+
+        /**
+         * Exercise Modification date updates on save.
+         */
+        testModificationDates: function (recordResults) {
+            new Chain([
+                this._deleteNotes.bind(this),
+                this._addNotes.bind(this),
+                this._checkModificationDates.bind(this),
                 function() { recordResults(Mojo.Test.passed); }
             ]).start();
         },
@@ -161,13 +183,12 @@ MementoServiceTests.prototype = function() {
          */
         _checkMultipleSavedNotes: function (main_done) {
             var prop_names = [
-                'uuid', 'name', 'text', 'created', 'modified'
+                'uuid', 'name', 'created', 'modified'
             ];
 
             this.tickleFunction();
 
-            this.notes_model.findAll(
-                null, null, null,
+            this.memento_service.findAllNotes(
                 function(notes) {
                     notes.each(function(result) {
 
@@ -194,7 +215,7 @@ MementoServiceTests.prototype = function() {
 
             // Waste some time before playing with timestamps.
             var time = function ()  { return (new Date()).getTime(); },
-                stop = time() + 500;
+                stop = time() + 1500;
             while (time() < stop) {  }
                 
             this.tickleFunction() ;
@@ -210,7 +231,7 @@ MementoServiceTests.prototype = function() {
 
                     this.tickleFunction();
 
-                    this.notes_model.save(
+                    this.memento_service.saveNote(
                         note, 
                         function(saved) {
                             Mojo.require(
@@ -226,7 +247,7 @@ MementoServiceTests.prototype = function() {
                 chain.push(function(done) {
                     this.tickleFunction();
 
-                    this.notes_model.find(
+                    this.memento_service.findNote(
                         note.uuid,
                         function (fetched) {
                             Mojo.require(orig_modified != fetched.modified,

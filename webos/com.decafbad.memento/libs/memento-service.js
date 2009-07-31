@@ -21,58 +21,44 @@ MementoService.prototype = function() {
         },
 
         deleteAllNotes: function(on_success, on_failure) {
-            var url = this.options.service_url + '?format=json';
-            new Ajax.Request(url, {
-                method: 'delete', evalJSON: true,
+            var url = this.options.service_url;
+            new Ajax.JSONRequest(url, {
+                method: 'DELETE',
                 // Only a 410 status is actually considered a success.
-                onSuccess: on_failure, 
-                onFailure: on_failure, 
-                on410:     on_success
+                on410:     on_success,
+                onSuccess: on_failure, onFailure: on_failure
             });
         },
 
         findAllNotes: function(on_success, on_failure) {
-            var url = this.options.service_url + '?format=json';
-            new Ajax.Request(url, {
-                method: 'get', evalJSON: true,
-                onSuccess: function(req) {
-                    var notes = req.responseJSON || [];
-                    on_success(notes, req);
-                }, 
-                onFailure: function(req) {
-                    on_failure(req);
-                }
-            });
-        },
-
-        addNote: function(data, on_success, on_failure) {
-            var url = this.options.service_url + '?format=json';
-            new Ajax.Request(url, {
-                method: 'post', 
-                evalJSON: true,
-                contentType: 'application/json',
-                postBody: $H(data).toJSON(),
-                onSuccess: function(req) {
-                    on_success(req.responseJSON, req);
-                }, 
-                onFailure: function(req) {
-                    on_failure(req);
-                }
+            var url = this.options.service_url;
+            new Ajax.JSONRequest(url, {
+                method: 'GET',
+                onSuccess: on_success, onFailure: on_failure
             });
         },
 
         findNote: function(uuid, on_success, on_failure) {
-            var url = this.options.service_url + '/notes/' + uuid + '?format=json';
-            new Ajax.Request(url, {
-                method: 'get', 
-                evalJSON: true,
-                contentType: 'application/json',
-                onSuccess: function(req) {
-                    on_success(req.responseJSON, req);
-                }, 
-                onFailure: function(req) {
-                    on_failure(req);
-                }
+            var url = this.options.service_url + '/notes/' + uuid;
+            new Ajax.JSONRequest(url, {
+                method: 'GET',
+                onSuccess: on_success, onFailure: on_failure
+            });
+        },
+
+        addNote: function(data, on_success, on_failure) {
+            var url = this.options.service_url;
+            new Ajax.JSONRequest(url, {
+                method: 'POST', postBody: data,
+                onSuccess: on_success, onFailure: on_failure
+            });
+        },
+
+        saveNote: function(data, on_success, on_failure) {
+            var url = this.options.service_url + '/notes/'+ data.uuid;
+            new Ajax.JSONRequest(url, {
+                method: 'PUT', postBody: data,
+                onSuccess: on_success, onFailure: on_failure
             });
         },
 
