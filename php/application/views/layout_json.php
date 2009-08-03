@@ -1,6 +1,8 @@
 <?php
 $callback = @$_GET['callback'];
-if ($callback) {
+if (!$callback) {
+    header('Content-Type: application/json');
+} else {
     header('Content-Type: text/javascript');
     // Whitelist the callback to alphanumeric and a few mostly harmless
     // characters, none of which can be used to form HTML or escape a JSONP call
@@ -10,10 +12,8 @@ if ($callback) {
         $callback
     );
     echo "$callback(";
-} else {
-    header('Content-Type: application/json');
 }
 
-echo json_encode($note->as_array());
+echo $content;
 
 if ($callback) echo ')';

@@ -6,125 +6,86 @@
  * @subpackage Models
  * @author     l.m.orchard <l.m.orchard@pobox.com>
  */
-class Note_Model extends Model
+class Note_Model extends ORM
 {
-    public $base_dir = null;
 
-    public $loaded   = false;
-
-    public $uuid     = null;
-    public $name     = null;
-    public $text     = null;
-    public $etag     = null;
-    public $created  = null;
-    public $modified = null;
-
-    public $table_columns = array(
-        'uuid'     => array('type' => 'string'),
-        'name'     => array('type' => 'string'),
-        'text'     => array('type' => 'string'),
-        'etag'     => array('type' => 'string'),
-        'created'  => array('type' => 'string'),
-        'modified' => array('type' => 'string'),
-    );
-
-    public function __construct($uuid=null, $base_dir=null)
-    {
-        // parent::__construct(); // No need for DB yet?
-        $this->base_dir = APPPATH . 'data/notes';
-        if (null !== $uuid) $this->find($uuid);
-    }
-
-    private function _filename()
-    {
-        $fn = "{$this->base_dir}/{$this->uuid}.txt";
-        return $fn;
-    }
-
-    public function find_all()
-    {
-        $notes = array();
-        foreach (glob($this->base_dir . '/*.txt') as $fn)  {
-            if (is_file($fn)) {
-                $name = substr($fn, strlen($this->base_dir)+1, -4);
-                $notes[] = new Note_Model($name);
-            }
-        }
-        return $notes;
-    }
-
-    public function find($uuid)
-    {
-        $uuid = strtolower($uuid);
-        $this->uuid = $uuid;
-        if (is_file($this->_filename())) {
-            $data = json_decode(file_get_contents($this->_filename(), true));
-            foreach ($data as $name=>$value) {
-                $this->{$name} = $value;
-            }
-            $this->etag   = $this->etag();
-            $this->loaded = true;
-        } else {
-            $this->uuid   = null;
-            $this->loaded = false;
-        }
-        return $this;
-    }
-
+    /**
+     * Save this note, updating etag.
+     */
     public function save()
     {
-        if (empty($this->uuid)) 
-            $this->uuid = uuid::uuid();
-
-        $this->uuid = strtolower($this->uuid);
-
-        // Using microseconds to stay friendly with JS times.
-        $now = number_format(( time() + microtime() ) * 1000, 0, '.', '');
-        if (empty($this->created)) $this->created = $now;
-        $this->modified = $now;
-
-        $data = $this->as_array();
-
-        $out = json_encode($data);
-        file_put_contents($this->_filename(), $out);
-        chmod($this->_filename(), 0664);
-        $this->loaded = true;
+        $this->etag = $this->etag();
+        return parent::save();
     }
 
-    public function delete()
-    {
-        if (!$this->loaded) return;
-        return unlink($this->_filename());
+    /**
+     * Produce an array, ensuring an up-to-date etag is included in the array.
+     *
+     * @return array
+     */
+    public function as_array() {
+        $this->etag = $this->etag();
+        return parent::as_array();
     }
 
-    public function delete_all()
-    {
-        if (Kohana::config('notes.enable_delete_all') !== true) {
-            throw new Exception('delete_all not enabled');
-        }
-        $all = $this->find_all();
-        foreach ($all as $note) {
-            $note->delete();
-        }
-    }
-
-    public function as_array()
-    {
-        $arr = array();
-        foreach ($this->table_columns as $name=>$meta) {
-            $arr[$name] = $this->{$name};
-        }
-        $arr['etag'] = $this->etag();
-        return $arr;
-    }
-
+    /**
+     * Produce an etag hash unique to the note content.
+     *
+     * @return string
+     */
     public function etag() {
         $vals = array();
         foreach ($this->table_columns as $name=>$meta) {
             if ($name=='etag') continue;
-            $vals[] = $this->{$name};
+            $vals[] = "{$name}: {$this->{$name}}";
         }
         return md5(join("---\n", $vals));
+    }
+
+    /**
+     * Allow UUID to be used as unique key for searches & etc.
+     */
+    public function unique_key($id) {
+        if (!empty($id) && is_string($id) && !ctype_digit($id) ) {
+            return 'uuid';
+        }
+        return parent::unique_key($id);
+    }
+
+    /**
+     * On deletion, try leaving a tombstone behind.
+     *
+     * @param string ID or null
+     */
+    public function delete($id = NULL) {
+        $uuid = NULL;
+    
+        if ($id === NULL AND $this->loaded) {
+            $uuid = $this->uuid;
+        } else if ($id !==null) {
+            $note = $this->find($id);
+            if ($note->loaded) $uuid = $note->uuid;
+        }
+
+        if (NULL !== $uuid) {
+            ORM::factory('note_tombstone')
+                ->set(array('uuid'=>$uuid))->save();
+        }
+
+        return parent::delete($id);
+    }
+
+    /**
+     * Delete all or a set of notes by calling the delete() method, thus 
+     * triggering creation of tombstones.
+     */
+    public function delete_all($ids=null)
+    {
+        $notes = $this->find_all($ids);
+        foreach ($notes as $note) {
+            $note->delete();
+        }
+        return $this->clear();
     }
 
 }

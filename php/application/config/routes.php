@@ -5,9 +5,9 @@
  * Sets the default route to "welcome"
  */
 
-$config['notes']             = 'main/index/$1';
-$config['notes/(.*);delete'] = 'main/deleteform/$1';
-$config['notes/(.*);edit']   = 'main/editform/$1';
-$config['notes/(.*)']        = 'main/view/$1';
+$config['notes']             = 'notes/index/$1';
+$config['notes/(.*);delete'] = 'notes/deleteform/$1';
+$config['notes/(.*);edit']   = 'notes/editform/$1';
+$config['notes/(.*)']        = 'notes/view/$1';
 
-$config['_default'] = 'main';
+$config['_default'] = 'notes';
