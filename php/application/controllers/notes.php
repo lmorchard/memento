@@ -27,7 +27,7 @@ class Notes_Controller extends Rest_Controller
     /**
      * Index resource setup for all HTTP methods
      */
-    public function index_setup()
+    public function index()
     {
     }
 
@@ -58,13 +58,12 @@ class Notes_Controller extends Rest_Controller
             $params['text'] : 'Your notes go here.';
         $note->save();
 
-        header("HTTP/1.1 201 Created");
         switch ($this->preferredAccept()) {
             case 'text/html': 
                 return url::redirect('notes/' . $note->uuid . ';edit');
             default:
-                $href = url::base() . 'notes/' . $note->uuid;
                 header("HTTP/1.1 201 Created");
+                $href = url::base() . 'notes/' . $note->uuid;
                 header("Location: {$href}");
                 echo json_encode(array('href' => $href));
                 exit;
@@ -90,13 +89,21 @@ class Notes_Controller extends Rest_Controller
     /**
      * View resource setup for all HTTP methods
      */
-    public function view_setup($uuid) {
+    public function view($uuid) {
         $this->note = $this->note_model->find($uuid);
         if (!$this->note->loaded) {
             return Event::run('system.404');
         }
-        header('ETag: ' . $this->note->etag);
-        header('Last-Modified: ' . date('r', strtotime($this->note->modified)));
+
+        // TODO: Optimize model to look up just etag and modified using uuid.
+        $etag = $this->note->etag();
+        $modified = date('r', strtotime($this->note->modified));
+        $this->enforceConditionalHeaders($etag, $modified);
+
+        if ('put' !== request::method()) {
+            header('ETag: ' .  $etag);
+            header('Last-Modified: ' . $modified);
+        }
     }
 
     /**
@@ -116,28 +123,6 @@ class Notes_Controller extends Rest_Controller
     }
 
     /**
-     * Save details for a note.
-     */
-    public function view_PUT($uuid)
-    {
-        $params = $this->getRequestParameters();
-        if (isset($params['name']))
-            $this->note->name = $params['name'];
-        if (isset($params['text']))
-            $this->note->text = $params['text'];
-        $this->note->save();
-
-        switch ($this->preferredAccept()) {
-            case 'text/html': 
-                header('HTTP/1.0 200 OK');
-                return url::redirect('notes/' . $this->note->uuid . ';edit');
-            default:
-                header('HTTP/1.0 204 No Content');
-                exit;
-        }
-    }
-
-    /**
      * Delete a note.
      */
     public function view_DELETE($uuid)
@@ -151,6 +136,31 @@ class Notes_Controller extends Rest_Controller
                 exit;
         }
         $this->auto_render = FALSE;
+    }
+
+    /**
+     * Save details for a note.
+     */
+    public function view_PUT($uuid)
+    {
+        $params = $this->getRequestParameters();
+        if (isset($params['name']))
+            $this->note->name = $params['name'];
+        if (isset($params['text']))
+            $this->note->text = $params['text'];
+        $this->note->save();
+
+        header('ETag: ' . $this->note->etag());
+        header('Last-Modified: ' . date('r', strtotime($this->note->modified)));
+
+        switch ($this->preferredAccept()) {
+            case 'text/html': 
+                header('HTTP/1.0 200 OK');
+                return url::redirect('notes/' . $this->note->uuid . ';edit');
+            default:
+                header('HTTP/1.0 204 No Content');
+                exit;
+        }
     }
 
 

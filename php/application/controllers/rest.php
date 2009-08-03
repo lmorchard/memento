@@ -54,6 +54,17 @@ class Rest_Controller extends Controller
     }
 
     /**
+     * In reaction to a 403 Forbidden event, throw up a forbidden view.
+     */
+    protected function show_403()
+    {
+        header('HTTP/1.1 403 Forbidden');
+        $this->view = View::factory('forbidden');
+        $this->_display();
+        exit();
+    }
+
+    /**
      * Accept X-HTTP-Method-Override header or POST _method parameter for 
      * specifying an alternate HTTP method.
      */
@@ -113,21 +124,10 @@ class Rest_Controller extends Controller
         }
 
         // If it exists, call a common setup method based on the original name.
-        $setup_method = $orig_method . '_setup';
+        $setup_method = $orig_method;
         if ($ro->hasMethod($setup_method)) {
             $ro->getMethod($setup_method)->invokeArgs($this, Router::$arguments);
         }
-    }
-
-    /**
-     * In reaction to a 403 Forbidden event, throw up a forbidden view.
-     */
-    public function show_403()
-    {
-        header('HTTP/1.1 403 Forbidden');
-        $this->view = View::factory('forbidden');
-        $this->_display();
-        exit();
     }
 
     /**
@@ -139,7 +139,7 @@ class Rest_Controller extends Controller
      *
      * @return array
      */
-    public function getRequestParameters()
+    protected function getRequestParameters()
     {
         $params = $_GET;
         $ct = $_SERVER['CONTENT_TYPE'];
@@ -155,34 +155,93 @@ class Rest_Controller extends Controller
 
         return $params;
     }
+
+    /**
+     * Enforce If-{None-}Match / If-{Un}Modified-Since headers.
+     * 304 Not Modified status sent on GET method, 
+     * 412 Precondition Failed on everything else.
+     *
+     * @param string ETag value
+     * @param string Modified date
+     */
+    protected function enforceConditionalHeaders($etag, $modified)
+    {
+        $cond = TRUE;
+        
+        if (isset($_SERVER['HTTP_IF_MATCH'])) {
+            // See also: http://www.w3.org/1999/04/Editing/
+            Kohana::log('debug', "IF MATCH");
+            $match_etag = $_SERVER['HTTP_IF_MATCH'];
+            if ('*' != $match_etag && $match_etag != $etag) $cond = FALSE;
+        }
+
+        if (isset($_SERVER['HTTP_IF_NONE_MATCH'])) {
+            // See also: http://www.w3.org/1999/04/Editing/
+            $match_etag = $_SERVER['HTTP_IF_NONE_MATCH'];
+            if ('*' == $match_etag || $match_etag == $etag) $cond = FALSE;
+        }
+
+        $modified = strtotime($modified);
+
+        if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE'])) {
+            $match_date = $_SERVER['HTTP_IF_MODIFIED_SINCE'];
+            if ($modified > $match_date) $cond = FALSE;
+        }
+
+        if (isset($_SERVER['HTTP_IF_UNMODIFIED_SINCE'])) {
+            $match_date = $_SERVER['HTTP_IF_UNMODIFIED_SINCE'];
+            if ($modified < $match_date) $cond = FALSE;
+        }
+
+        if (!$cond) {
+            if ('get' == request::method()) {
+                header('HTTP/1.1 304 Not Modified');
+            } else {
+                header('HTTP/1.1 412 Precondition Failed');
+            }
+            exit;
+        }
+
+    }
+
     /**
      * Given the known content types, return the preferred type based on the 
      * Accept: header.
      *
      * @return string
      */
-    public function preferredAccept()
+    protected function preferredAccept()
     {
         return request::preferred_accept(array_keys($this->content_types));
     }
 
     /**
      * Attempt to negotiate the name of a view based on prefix and content type 
-     * name, based on Accept: header.
+     * name, based on Accept: header and _accept parameter.
      */
-    public function negotiateView($prefix)
+    protected function negotiateView($prefix)
     {
+        $mime_types = array();
+
+        // HACK: If _accept parameter appears in GET or POST params, use that 
+        // type as the highest priority - higher than any allowed in spec.
+        if (isset($_GET['_accept']))
+            $mime_types[$_GET['_accept']] = 2.0;
+        if (isset($_POST['_accept']))
+            $mime_types[$_POST['_accept']] = 3.0;
+
         // Collect all client-acceptable content types and sort in descending 
         // order of preference.
-        $mime_types = array();
-		foreach (array_unique(array_keys($this->content_types)) as $type) {
-			$mime_types[$type] = request::accepts_at_quality($type);
-		}
+        foreach (array_unique(array_keys($this->content_types)) as $type) {
+            if (!isset($mime_types[$type])) {
+                $mime_types[$type] = request::accepts_at_quality($type);
+            }
+        }
         arsort($mime_types);
 
         // Run down the preferred list and try to find a suitable view.
         foreach ($mime_types as $type=>$q) {
-            if (0===$q) continue;
+            if (0===$q || !isset($this->content_types[$type])) continue;
             $name = $this->content_types[$type];
             $proposed = "{$prefix}_{$name}";
             if (Kohana::find_file('views', $proposed)) {
@@ -190,14 +249,15 @@ class Rest_Controller extends Controller
             }
         }
 
-        // If all else fails, return null.
-        return null;
+        // If all else fails, respond with an error.
+        header('HTTP/1.1 406 Not Acceptable'); 
+        exit;
     }
 
     /**
      * Render a template wrapped in the global layout.
      */
-    public function renderView()
+    protected function renderView()
     {
         if (TRUE === $this->auto_render) {
 
@@ -224,18 +284,11 @@ class Rest_Controller extends Controller
                 }
             } 
 
-            if (!empty($this->view) && !empty($this->layout)) {
-                // Render the core view as a var inside layout, then render layout.
-                $this->layout
-                    ->set('content', $this->view->render())
-                    ->render(true);
-            } else if (!empty($this->layout)) {
-                // Only render the layout, since core view emptied.
-                $this->layout->render(true);
-            } else if (!empty($this->view)) {
-                // Only render the core view, since the layout emptied.
-                $this->view->render(true);
-            }
+            $content = (!empty($this->view)) ?
+                $this->view->render() : '';
+            $content = (!empty($this->layout)) ?
+                $this->layout->set('content', $content)->render() : $content;
+            echo $content;
 
             Event::run('REST_Controller.auto_rendered', $this);
 
