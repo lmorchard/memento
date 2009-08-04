@@ -1,4 +1,4 @@
 <?php defined('SYSPATH') OR die('No direct access allowed.');
 
-$config['enable_delete_all'] = TRUE;
+$config['enable_delete_all'] = FALSE;
 

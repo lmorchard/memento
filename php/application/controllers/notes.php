@@ -20,6 +20,7 @@ class Notes_Controller extends Rest_Controller
     public function __construct()
     {
         $this->note_model = new Note_Model();
+
         parent::__construct();
     }
 
@@ -29,6 +30,19 @@ class Notes_Controller extends Rest_Controller
      */
     public function index()
     {
+        if ('post' == request::method()) return;
+
+        $since = $this->input->get('since', null);
+        $until = $this->input->get('until', null);
+        
+        $this->notes = $this->note_model
+            ->find_modified_in_timerange($since, $until);
+
+        $tombstones = $this->input->get('tombstones', null);
+        if (null !== $tombstones) {
+            $this->tombstones = ORM::factory('note_tombstone')
+                ->find_modified_in_timerange($since, $until);
+        }
     }
 
     /**
@@ -36,9 +50,31 @@ class Notes_Controller extends Rest_Controller
      */ 
     public function index_GET() 
     {
-        // Display list of notes on GET.
-        $this->notes = $this->note_model->find_all();
         $this->view->notes = $this->notes;
+        if (!empty($this->tombstones))
+            $this->view->tombstones = $this->tombstones;
+    }
+
+    /**
+     * Accept a DELETE to the index resource to delete all notes.
+     */
+    public function index_DELETE()
+    {
+        // Delete all notes (if enabled, for testing) on DELETE to index.
+        if (Kohana::config('notes.enable_delete_all') !== true) {
+            Event::run('system.403');
+        } else {
+            foreach ($this->notes as $note) {
+                $note->delete();
+            }
+            if (!empty($this->tombstones)) {
+                foreach ($this->tombstones as $tombstone) {
+                    $tombstone->delete();
+                }
+            }
+            header('HTTP/1.1 410 Gone');
+            exit;
+        }
     }
 
     /**
@@ -61,27 +97,18 @@ class Notes_Controller extends Rest_Controller
         switch ($this->preferredAccept()) {
             case 'text/html': 
                 return url::redirect('notes/' . $note->uuid . ';edit');
-            default:
+            case 'application/json':
                 header("HTTP/1.1 201 Created");
+                header('Content-Type: application/json');
                 $href = url::base() . 'notes/' . $note->uuid;
                 header("Location: {$href}");
                 echo json_encode(array('href' => $href));
                 exit;
-        }
-    }
-
-    /**
-     * Accept a DELETE to the index resource to delete all notes.
-     */
-    public function index_DELETE()
-    {
-        // Delete all notes (if enabled, for testing) on DELETE to index.
-        if (Kohana::config('notes.enable_delete_all') !== true) {
-            Event::run('system.403');
-        } else {
-            $this->note_model->delete_all(); 
-            header('HTTP/1.1 410 Gone');
-            exit;
+            default:
+                header("HTTP/1.1 201 Created");
+                $href = url::base() . 'notes/' . $note->uuid;
+                header("Location: {$href}");
+                exit;
         }
     }
 
@@ -90,20 +117,41 @@ class Notes_Controller extends Rest_Controller
      * View resource setup for all HTTP methods
      */
     public function view($uuid) {
+
+        if (ctype_digit($uuid)) {
+            // Disallow pure numeric UUIDs
+            return Event::run('system.403');
+        }
+
         $this->note = $this->note_model->find($uuid);
-        if (!$this->note->loaded) {
-            return Event::run('system.404');
+
+        if ('put' === request::method()) {
+            if (!$this->note->loaded) {
+                // Require an If-[None-]Match header on blind save.
+                if (!$this->input->server('HTTP_IF_MATCH', null) &&
+                        !$this->input->server('HTTP_IF_NONE_MATCH', null)) {
+                    return Event::run('system.403');
+                }
+
+                // PUT request is allowed to blindly save an unknown note.
+                $this->note = ORM::factory('note');
+                $this->note->uuid = $uuid;
+            }
+        } else {
+            if (!$this->note->loaded) {
+                // All other methods throw an error.
+                return Event::run('system.404');
+            }
         }
 
         // TODO: Optimize model to look up just etag and modified using uuid.
-        $etag = $this->note->etag();
+        $etag = $this->note->loaded ? $this->note->etag() : null;
         $modified = date('r', strtotime($this->note->modified));
-        $this->enforceConditionalHeaders($etag, $modified);
 
-        if ('put' !== request::method()) {
-            header('ETag: ' .  $etag);
-            header('Last-Modified: ' . $modified);
-        }
+        header('ETag: ' .  $etag);
+        header('Last-Modified: ' . $modified);
+
+        $this->enforceConditionalHeaders($etag, $modified);
     }
 
     /**
@@ -144,6 +192,7 @@ class Notes_Controller extends Rest_Controller
     public function view_PUT($uuid)
     {
         $params = $this->getRequestParameters();
+
         if (isset($params['name']))
             $this->note->name = $params['name'];
         if (isset($params['text']))
@@ -151,7 +200,8 @@ class Notes_Controller extends Rest_Controller
         $this->note->save();
 
         header('ETag: ' . $this->note->etag());
-        header('Last-Modified: ' . date('r', strtotime($this->note->modified)));
+        header('Last-Modified: ' . 
+            date('r', strtotime($this->note->modified)));
 
         switch ($this->preferredAccept()) {
             case 'text/html': 
@@ -167,7 +217,7 @@ class Notes_Controller extends Rest_Controller
     /**
      * Display an edit form for a note.
      */
-    public function editform_GET($uuid)
+    public function editform($uuid)
     {
         $this->view->note = $this->note_model->find($uuid);
     }
@@ -175,7 +225,7 @@ class Notes_Controller extends Rest_Controller
     /**
      * Display a delete form for a note.
      */
-    public function deleteform_GET($uuid)
+    public function deleteform($uuid)
     {
         $this->view->note = $this->note_model->find($uuid);
     }

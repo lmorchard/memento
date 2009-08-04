@@ -15,7 +15,7 @@ php/application/logs/
 php/application/data/
 php/application/tests/log/
 php/application/config/config-local.php
-php/application/config/config-testing.php
+php/application/config/config-tests.php
 docs/api/
 logs/
 logs/*log

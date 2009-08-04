@@ -1,3 +1,5 @@
+## App-specific
+
 * markdown preview pane
 * oauth on web api
 * atompub?
@@ -9,3 +11,7 @@
 * note urls with name rather than uuid
 * switch to db?
 
+## General
+
+* extract Rest_Controller into module
+* rework View class to allow Django-like inheritance?

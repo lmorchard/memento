@@ -29,6 +29,10 @@ class LMO_Utils_EnvConfig {
     const EVENT_READY = 
         'LMO_Utils_EnvConfig.ready';
 
+    public static $allowed_overrides = array(
+        'local', 'tests'
+    );
+
     /**
      * Initialize to apply configs after system.ready
      */
@@ -43,6 +47,13 @@ class LMO_Utils_EnvConfig {
     public static function _handle_ready()
     {
         $env = 'local';
+
+        if (isset($_SERVER['HTTP_X_ENVIRONMENT_OVERRIDE'])) {
+            $over = $_SERVER['HTTP_X_ENVIRONMENT_OVERRIDE'];
+            if (in_array($over, self::$allowed_overrides))
+                $env = $over;
+        }
+
         Event::run(self::EVENT_SELECT_ENVIRONMENT, $env);
         if (!empty($env)) {
             self::apply($env);

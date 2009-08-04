@@ -43,24 +43,25 @@ class Rest_Controller extends Controller
     {
         parent::__construct();
 
+        Event::add('system.403', array($this, 'show_403'));
+        Event::add('system.post_controller', array($this, 'renderView'));
+
         $this->layout = View::factory();
         $this->view   = View::factory();
 
         $this->fixupRequestMethod();
         $this->fixupControllerMethod();
-
-        Event::add('system.403', array($this, 'show_403'));
-        Event::add('system.post_controller', array($this, 'renderView'));
     }
 
     /**
      * In reaction to a 403 Forbidden event, throw up a forbidden view.
      */
-    protected function show_403()
+    public function show_403()
     {
         header('HTTP/1.1 403 Forbidden');
-        $this->view = View::factory('forbidden');
-        $this->_display();
+        Router::$method = self::$original_controller_method = 'show_403';
+        Router::$controller = '';
+        $this->renderView();
         exit();
     }
 
@@ -116,17 +117,18 @@ class Rest_Controller extends Controller
 
         // If it exists, reroute based on HTTP method
         $new_method  = $orig_method . '_' . $http_method;
-        if (method_exists($this, $new_method)) {
+        if ($ro->hasMethod($new_method)) {
             Router::$method = $new_method;
-        } else {
+
+            // If it exists, call a common setup method based on the 
+            // original name.
+            if ($ro->hasMethod($orig_method)) {
+                $ro->getMethod($orig_method)
+                    ->invokeArgs($this, Router::$arguments);
+            }
+        } else if (!$ro->hasMethod($orig_method)) {
             header("HTTP/1.1 405 Method Not Allowed");
             exit;
-        }
-
-        // If it exists, call a common setup method based on the original name.
-        $setup_method = $orig_method;
-        if ($ro->hasMethod($setup_method)) {
-            $ro->getMethod($setup_method)->invokeArgs($this, Router::$arguments);
         }
     }
 
@@ -142,12 +144,12 @@ class Rest_Controller extends Controller
     protected function getRequestParameters()
     {
         $params = $_GET;
-        $ct = $_SERVER['CONTENT_TYPE'];
+        $ct = $this->input->server('CONTENT_TYPE');
         if (strpos($ct, 'application/x-www-form-urlencoded')!==FALSE) {
             // Accept a standard form POST
             $params = $_POST;
         } else if (strpos($ct, 'application/json')!==FALSE) { 
-            if ($_SERVER['CONTENT_LENGTH'] > 0) {
+            if ($this->input->server('CONTENT_LENGTH', 0) > 0) {
                 // Accept JSON-encoded parameters
                 $params = json_decode(file_get_contents('php://input'), true);
             }
@@ -170,15 +172,22 @@ class Rest_Controller extends Controller
         
         if (isset($_SERVER['HTTP_IF_MATCH'])) {
             // See also: http://www.w3.org/1999/04/Editing/
-            Kohana::log('debug', "IF MATCH");
             $match_etag = $_SERVER['HTTP_IF_MATCH'];
-            if ('*' != $match_etag && $match_etag != $etag) $cond = FALSE;
+            if ('*' == $match_etag) { 
+                if (empty($etag)) $cond = FALSE;
+            } else {
+                if ($match_etag != $etag) $cond = FALSE;
+            }
         }
 
         if (isset($_SERVER['HTTP_IF_NONE_MATCH'])) {
             // See also: http://www.w3.org/1999/04/Editing/
             $match_etag = $_SERVER['HTTP_IF_NONE_MATCH'];
-            if ('*' == $match_etag || $match_etag == $etag) $cond = FALSE;
+            if ('*' == $match_etag) { 
+                if (!empty($etag)) $cond = FALSE;
+            } else {
+                if ($match_etag == $etag) $cond = FALSE;
+            }
         }
 
         $modified = strtotime($modified);
@@ -257,7 +266,7 @@ class Rest_Controller extends Controller
     /**
      * Render a template wrapped in the global layout.
      */
-    protected function renderView()
+    public function renderView()
     {
         if (TRUE === $this->auto_render) {
 
@@ -274,7 +283,7 @@ class Rest_Controller extends Controller
 
             if ($this->view && !$this->view->get_filename()) {
                 $name = $this->negotiateView(
-                    Router::$controller . '/' . 
+                    ((Router::$controller) ? Router::$controller . '/' : '' ) . 
                     self::$original_controller_method
                 );
                 if (!empty($name)) {

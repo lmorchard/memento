@@ -10,12 +10,36 @@ class Note_Model extends ORM
 {
 
     /**
+     * Find notes in a time range, ideally in ISO8601 format.
+     *
+     * @param string Time since
+     * @param string Time until
+     * @return ORM_Iterator
+     */
+    public function find_modified_in_timerange($since=null, $until=null)
+    {
+        $since = strtotime($since);
+        if ($since) $this->where('modified >=', gmdate('c', $since));
+        $until = strtotime($until);
+        if ($until) $this->where('modified <=', gmdate('c', $until));
+        return $this->find_all();
+    }
+
+    /**
      * Save this note, updating etag.
      */
     public function save()
     {
         $this->etag = $this->etag();
-        return parent::save();
+
+        $rv = parent::save();
+
+        // If there's a tombstone for this UUID, delete it since we just saved 
+        // it. (undeleted it?)
+        $ts = ORM::factory('note_tombstone', $this->uuid);
+        if ($ts->loaded) $ts->delete();
+
+        return $rv;
     }
 
     /**

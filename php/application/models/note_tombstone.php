@@ -18,4 +18,23 @@ class Note_tombstone_Model extends ORM
         return parent::unique_key($id);
     }
 
+    /**
+     * Find tombstones in a time range, ideally in ISO8601 format.
+     *
+     * Using the term "modified" although the column "created" is searched, to 
+     * maintain consistency with Note_Model
+     *
+     * @param string Time since
+     * @param string Time until
+     * @return ORM_Iterator
+     */
+    public function find_modified_in_timerange($since=null, $until=null)
+    {
+        $since = strtotime($since);
+        if ($since) $this->where('created >=', gmdate('c', $since));
+        $until = strtotime($until);
+        if ($until) $this->where('created <=', gmdate('c', $until));
+        return $this->find_all();
+    }
+
 }
