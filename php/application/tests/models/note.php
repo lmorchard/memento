@@ -20,6 +20,8 @@ class Note_Test extends PHPUnit_Framework_TestCase
      */
     public function setUp()
     {
+        LMO_Utils_EnvConfig::apply('tests');
+
         $this->note_model = 
             ORM::factory('note')->delete_all();
         $this->note_tombstone_model = 
