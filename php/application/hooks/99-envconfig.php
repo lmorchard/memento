@@ -50,8 +50,9 @@ class LMO_Utils_EnvConfig {
 
         if (isset($_SERVER['HTTP_X_ENVIRONMENT_OVERRIDE'])) {
             $over = $_SERVER['HTTP_X_ENVIRONMENT_OVERRIDE'];
-            if (in_array($over, self::$allowed_overrides))
+            if (in_array($over, self::$allowed_overrides)) {
                 $env = $over;
+            }
         }
 
         Event::run(self::EVENT_SELECT_ENVIRONMENT, $env);

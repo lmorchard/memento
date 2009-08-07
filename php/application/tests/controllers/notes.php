@@ -223,8 +223,8 @@ class Notes_Controller_Test extends PHPUnit_Framework_TestCase
             ),
             array('If-Match' => $orig_etag)
         );
-        $this->assertEquals(204, $resp['status'],
-            'Status should be 204 No Content');
+        $this->assertEquals(200, $resp['status'],
+            'Status should be 200 OK');
         $changed_etag = $resp['headers']['etag'];
 
         // Now, pretend we're a second editor trying to save not knowing 
@@ -271,8 +271,8 @@ class Notes_Controller_Test extends PHPUnit_Framework_TestCase
             array('If-Match' => $changed_etag)
         );
         $changed_etag_3 = $resp['headers']['etag'];
-        $this->assertEquals(204, $resp['status'],
-            'Status should be 204 No Content');
+        $this->assertEquals(200, $resp['status'],
+            'Status should be 200 OK');
 
         // Oh yeah, and what if we don't care, and just want to clobber any 
         // existing document?  Try If-Match: *
@@ -284,8 +284,8 @@ class Notes_Controller_Test extends PHPUnit_Framework_TestCase
             array('If-Match' => '*')
         );
         $changed_etag_3 = $resp['headers']['etag'];
-        $this->assertEquals(204, $resp['status'],
-            'Status should be 204 No Content');
+        $this->assertEquals(200, $resp['status'],
+            'Status should be 200 OK');
 
         // As a safety measure, this API disallows blind saves without
         // If-None-Match: *
@@ -319,8 +319,8 @@ class Notes_Controller_Test extends PHPUnit_Framework_TestCase
             ),
             array('If-None-Match' => '*')
         );
-        $this->assertEquals(204, $resp['status'],
-            'Status should be 204 No Content');
+        $this->assertEquals(200, $resp['status'],
+            'Status should be 200 OK');
 
         // Now that it exists, disallow a blind write to a non-existent URL, 
         // with If-None-Match: *

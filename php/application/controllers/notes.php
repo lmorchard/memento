@@ -98,12 +98,17 @@ class Notes_Controller extends Rest_Controller
             case 'text/html': 
                 return url::redirect('notes/' . $note->uuid . ';edit');
             case 'application/json':
+                
                 header("HTTP/1.1 201 Created");
                 header('Content-Type: application/json');
+                
                 $href = url::base() . 'notes/' . $note->uuid;
                 header("Location: {$href}");
-                echo json_encode(array('href' => $href));
-                exit;
+
+                $this->view->note = $note;
+                $this->view->set_filename('notes/view_json');
+                
+                return;
             default:
                 header("HTTP/1.1 201 Created");
                 $href = url::base() . 'notes/' . $note->uuid;
@@ -205,8 +210,14 @@ class Notes_Controller extends Rest_Controller
 
         switch ($this->preferredAccept()) {
             case 'text/html': 
-                header('HTTP/1.0 200 OK');
+                header('HTTP/1.1 200 OK');
                 return url::redirect('notes/' . $this->note->uuid . ';edit');
+            case 'application/json':
+                header("HTTP/1.1 200 OK");
+                header('Content-Type: application/json');
+                $this->view->note = $this->note;
+                $this->view->set_filename('notes/view_json');
+                return;
             default:
                 header('HTTP/1.0 204 No Content');
                 exit;
