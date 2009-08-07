@@ -7,6 +7,8 @@
 
 APPID=com.decafbad.memento
 VERSION=0.0.1
+NOVACOM_EMU_ID=$(shell novacom -l | grep emulator | head -1 | cut -d' ' -f2)
+NOVACOM_DEVICE_ID=$(shell novacom -l | grep castle-linux | head -1 | cut -d' ' -f2)
 
 IPK=$(APPID)_$(VERSION)_all.ipk
 
@@ -15,32 +17,44 @@ all: update-emu
 package:
 	palm-package $(APPID)
 
-#update-emu: package kill-emu remove-emu install-emu launch-emu
-update-emu: package install-emu launch-emu
+update-emu: package kill-app-emu kill-inspector restart-emu install-app-emu \
+	launch-app-emu launch-inspector
 
-kill-emu:
+kill-app-emu:
 	-palm-launch -d tcp -c $(APPID)
 
-remove-emu: kill-emu
+kill-inspector:
+	-ps x | grep -i 'palm inspector' | grep -v 'grep' | cut -d' ' -f1 | xargs kill
+
+remove-app-emu: kill-app-emu
 	-palm-install -d tcp -r $(APPID)
 
-install-emu: package
+restart-emu:
+	echo 'killall LunaSysMgr; exit' | novacom -d $(NOVACOM_EMU_ID) open tty://
+
+install-app-emu: package
 	palm-install -d tcp $(IPK)
 
-launch-emu: install-emu
+launch-app-emu: install-app-emu
 	palm-launch -d tcp -i $(APPID)
 
-#update-device: package kill-device remove-device install-device launch-device
-update-device: package install-device launch-device
+launch-inspector:
+	open -a Palm\ Inspector
 
-kill-device:
+#update-device: package kill-device remove-device install-device launch-device
+update-device: package kill-app-device install-app-device launch-app-device
+
+kill-app-device:
 	-palm-launch -d usb -c $(APPID)
 
-remove-device: kill-device
+remove-device-app: kill-device
 	-palm-install -d usb -r $(APPID)
 
-install-device: package
+restart-device:
+	echo 'killall LunaSysMgr; exit' | novacom -d $(NOVACOM_DEVICE_ID) open tty://
+
+install-app-device: package
 	palm-install -d usb $(IPK)
 
-launch-device: install-device
+launch-app-device: install-device
 	palm-launch -d usb -i $(APPID)
