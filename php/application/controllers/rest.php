@@ -178,7 +178,6 @@ class Rest_Controller extends Controller
             } else {
                 if ($match_etag != $etag) $cond = FALSE;
             }
-            error_log("IF-MATCH: {$match_etag} ({$etag})");
         }
 
         if (isset($_SERVER['HTTP_IF_NONE_MATCH'])) {
