@@ -1,5 +1,20 @@
 [
+
+    {"source": "vendor\/Math.uuid.js"}, 
+    {"source": "vendor\/simpledateformat.js"}, 
+    {"source": "vendor\/date-iso8601.js"}, 
+
+    {"source": "javascripts\/chain.js"}, 
+    {"source": "javascripts\/ajax-json-request.js"}, 
+    {"source": "javascripts\/memento\/memento.js"}, 
+    {"source": "javascripts\/memento\/service.js"}, 
+    {"source": "javascripts\/memento\/sync.js"}, 
+
+    {"source": "app\/models/notes-model.js"}, 
+
+    {"source": "app\/assistants\/app-assistant.js"},
     {"source": "app\/assistants\/stage-assistant.js"},
+
     {
         "scenes": "home",
         "source": "app\/assistants\/home-assistant.js"

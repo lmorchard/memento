@@ -60,7 +60,7 @@ class Note_Model extends ORM
     public function etag() {
         $vals = array();
         foreach ($this->table_columns as $name=>$meta) {
-            if (in_array($name, array('etag', 'created', 'modified'))) {
+            if (in_array($name, array('id', 'etag', 'created', 'modified'))) {
                 // Skip a few non-content properties.
                 continue;
             }

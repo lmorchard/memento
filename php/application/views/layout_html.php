@@ -36,6 +36,7 @@ if ($is_mobile) {
         <script type="text/javascript" src="<?=url::base()?>js/prototype-1.6.0.3.js"></script>
         <script type="text/javascript" src="<?=url::base()?>js/main.js"></script>
         <script type="text/javascript">
+            if (typeof Main == 'undefined') Main = {};
             Main.IS_MOBILE = <?= json_encode($is_mobile) ?>;
         </script>
 

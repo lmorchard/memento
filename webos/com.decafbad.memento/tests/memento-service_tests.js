@@ -8,6 +8,19 @@ function MementoServiceTests(tickleFunction) {
     this.initialize(tickleFunction);
 }
 MementoServiceTests.prototype = function() {
+
+    // Monkey patch the JSONRequest class to set the test environment
+    // override header.
+    var orig_json_request = Ajax.JSONRequest;
+    Ajax.JSONRequest = Class.create(orig_json_request, {
+        initialize: function($super, url, options) {
+            if (!options.requestHeaders) {
+                options.requestHeaders = {};
+            }
+            options.requestHeaders['X-Environment-Override'] = 'tests';
+            $super(url, options);
+        }
+    });
         
     return {
         timeoutInterval: 5000,
@@ -18,8 +31,8 @@ MementoServiceTests.prototype = function() {
         initialize: function (tickleFunction) {
             this.tickleFunction = tickleFunction;
             
-            this.memento_service = new MementoService({
-                service_url: 'http://192.168.123.62/~lorchard/memento/'
+            this.memento_service = new Memento.Service({
+                service_url: 'http://dev.memento.decafbad.com/'
             });
 
             this.notes = [];
@@ -42,13 +55,13 @@ MementoServiceTests.prototype = function() {
          */
         testAddDelete: function(recordResults) {
             new Chain([
-                this._deleteNotes.bind(this),
-                this._ensureEmpty.bind(this),
-                this._addNotes.bind(this),
-                this._deleteNotes.bind(this),
-                this._ensureEmpty.bind(this),
+                '_deleteNotes',
+                '_ensureEmpty',
+                '_addNotes',
+                '_deleteNotes',
+                '_ensureEmpty',
                 function() { recordResults(Mojo.Test.passed); }
-            ]).start();
+            ], this).start();
         },
 
         /**
@@ -56,11 +69,11 @@ MementoServiceTests.prototype = function() {
          */
         testFind: function(recordResults) {
             new Chain([
-                this._deleteNotes.bind(this),
-                this._addNotes.bind(this),
-                this._checkSavedNotes.bind(this),
+                '_deleteNotes',
+                '_addNotes',
+                '_checkSavedNotes',
                 function() { recordResults(Mojo.Test.passed); }
-            ]).start();
+            ], this).start();
         },
 
         /**
@@ -68,11 +81,11 @@ MementoServiceTests.prototype = function() {
          */
         testFindAll: function(recordResults) {
             new Chain([
-                this._deleteNotes.bind(this),
-                this._addNotes.bind(this),
-                this._checkMultipleSavedNotes.bind(this),
+                '_deleteNotes',
+                '_addNotes',
+                '_checkMultipleSavedNotes',
                 function() { recordResults(Mojo.Test.passed); }
-            ]).start();
+            ], this).start();
         },
 
         /**
@@ -80,11 +93,11 @@ MementoServiceTests.prototype = function() {
          */
         testModificationDates: function (recordResults) {
             new Chain([
-                this._deleteNotes.bind(this),
-                this._addNotes.bind(this),
-                this._checkModificationDates.bind(this),
+                '_deleteNotes',
+                '_addNotes',
+                '_checkModificationDates',
                 function() { recordResults(Mojo.Test.passed); }
-            ]).start();
+            ], this).start();
         },
 
         /**
@@ -113,7 +126,7 @@ MementoServiceTests.prototype = function() {
                 chain.push(function (done) {
 
                     var check_note = function (note) {
-
+                    try{
                         // Retain the note just saved.
                         this.notes.push(note); 
                         this.by_id[note.uuid] = note;
@@ -127,6 +140,7 @@ MementoServiceTests.prototype = function() {
                         }.bind(this));
 
                         done();
+                        } catch(e) { Mojo.Log.logException(e) }
                     }.bind(this);
 
                     this.tickleFunction();
@@ -215,7 +229,7 @@ MementoServiceTests.prototype = function() {
 
             // Waste some time before playing with timestamps.
             var time = function ()  { return (new Date()).getTime(); },
-                stop = time() + 1500;
+                stop = time() + 1000;
             while (time() < stop) {  }
                 
             this.tickleFunction() ;
@@ -250,8 +264,10 @@ MementoServiceTests.prototype = function() {
                     this.memento_service.findNote(
                         note.uuid,
                         function (fetched) {
-                            Mojo.require(orig_modified != fetched.modified,
-                                "Fetched modification date should differ");
+                            Mojo.require(
+                                orig_modified != fetched.modified,
+                                "Fetched modification date should differ"
+                            );
                             done();
                         },
                         function() { throw "Note find failed"; }

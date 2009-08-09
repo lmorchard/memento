@@ -1,5 +1,10 @@
 [
 	{
+		"title": "Memento Sync Tests",
+		"source": "tests/memento-sync_tests.js",
+		"testFunction": "MementoSyncTests"
+	},
+	{
 		"title": "Memento Service Tests",
 		"source": "tests/memento-service_tests.js",
 		"testFunction": "MementoServiceTests"
@@ -10,3 +15,4 @@
 		"testFunction": "NotesModelTests"
 	}
 ]
+

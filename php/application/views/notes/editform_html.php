@@ -6,6 +6,7 @@
 <?php slot::set('page_title', $h['name']) ?>
 
 <form id="editor" method="POST" action="<?=url::base()?>notes/<?=$note->uuid?>?_method=PUT">
+    <input type="hidden" name="modified" value="true" />
     <div class="header">        
         <h1><?=$h['name']?></h1>
         <a class="back" href="<?=url::base()?>notes/">&lt;&lt; back</a>

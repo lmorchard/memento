@@ -49,7 +49,7 @@ class ORM extends ORM_Core {
         if (isset($this->table_columns['created']) && empty($this->created)) {
             $this->created = gmdate('c');
         }
-        if (isset($this->table_columns['modified'])) {
+        if (isset($this->table_columns['modified']) && empty($this->modified)) {
             $this->modified = gmdate('c');
         }
         if (isset($this->table_columns['uuid']) && empty($this->uuid)) {

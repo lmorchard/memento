@@ -1,1 +1,59 @@
-Find me in app/views/preferences/preferences-scene.html.
+<div class="palm-page-header">
+    <div class="palm-page-header-wrapper">
+        <div class="icon news-mini-icon"></div>
+        <div class="title">Memento Preferences</div>             
+    </div>
+</div>
+
+<div class="palm-group">
+	<div class="palm-group-title" x-mojo-loc=''>Web Sync</div>
+	<div id="edit-account-new-message-list" class="palm-list">
+		<div class="palm-row single">
+			<div class="palm-row-wrapper">   
+				<div x-mojo-element="ToggleButton" id="sync_enabled"></div>
+				<div class="title" x-mojo-loc=''>Enabled</div>  
+			</div>
+            <div x-mojo-element="Drawer" id="features_drawer">
+                <div class="palm-row last">
+                    <div class="palm-row-wrapper">
+                        <div class="palm-group">
+                            <div class="palm-group-title">Service URL</div>
+                            <div class="palm-list">
+                                <div class="palm-row single">
+                                    <div class="palm-row-wrapper textfield-group" x-mojo-focus-highlight="true">
+                                        <div class="title">
+                                            <div id="sync_url" name="sync_url"  x-mojo-element="TextField"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="palm-group">
+                            <div class="palm-group-title">Advanced</div>
+                            <div class="palm-list">
+                                <div class="palm-row first">
+                                    <div class="palm-row-wrapper">   
+                                        <div x-mojo-element="ToggleButton" id="sync_on_start"></div>
+                                        <div class="title" x-mojo-loc=''>Sync on launch</div>  
+                                    </div>
+                                </div>
+                                <div class="palm-row">
+                                    <div class="palm-row-wrapper">                                             
+                                        <div x-mojo-element="ToggleButton" id="sync_on_open"></div>
+                                        <div class="title" x-mojo-loc=''>Sync on note open</div>
+                                    </div>
+                                </div>
+                                <div class="palm-row last">
+                                    <div class="palm-row-wrapper">                                             
+                                        <div x-mojo-element="ToggleButton" id="sync_on_save"></div>
+                                        <div class="title" x-mojo-loc=''>Sync on note save</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+		</div>
+    </div>
+</div>

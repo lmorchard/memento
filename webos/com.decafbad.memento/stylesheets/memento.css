@@ -15,6 +15,30 @@
     background: transparent url(../images/page_white_stack.png) no-repeat 0px 15px;
     padding-left: 22px;
 }
+.home-scene .sort-selector-menu {
+    top: 34px;
+    left: auto;
+    right: 0px;
+}
+.home-scene #sort-selector {
+    cursor: pointer;
+	position:absolute;
+    top: 0px;
+    right: 0px;
+	float:right;
+	margin: 8px -16px 0px 0px;
+    padding: 0 4px 0 0;
+	font-size: 11px;
+	text-transform: uppercase;
+	font-weight: bold;
+	height:35px;
+	line-height: 33px;
+    min-width: 8ex;
+	border-width: 0px 22px 0px 16px;
+	-webkit-border-image: url(../images/header_selector.png) 0 22 0 16 stretch stretch;
+	-webkit-box-sizing: border-box;	
+}
+
 .home-scene #notes-list .palm-group .palm-list .note-item .title {
     padding: 2px 0px 0px 30px;
     background: transparent url(../images/page_white_text.png) no-repeat 8px 8px;
@@ -27,7 +51,11 @@
     padding: 0 0 0 30px;
 }
 .home-scene .palm-menu-icon.new-note {
-    background: transparent url(../images/page_white_add.png) no-repeat 8px 8px;
+    /*
+    background: transparent url(../images/page_white_add_cmd.png) no-repeat 8px 8px;
+    */
+    background: transparent url(../images/new_note.png) no-repeat 8px 8px;
+    margin: -4px 0 0 -4px;
 }
 
 .note-scene .palm-header {
@@ -48,30 +76,7 @@
     min-height: 400px;
 }
 
-/*
-.home-scene #notes-list .palm-list .palm-group.unlabeled {
-    border: none;
-    -webkit-border-image: none;
+.preferences-scene #sync_url,
+.preferences-scene #sync_url input {
+   font-size: 85%;
 }
-.home-scene #notes-list .palm-list .palm-group.unlabeled .palm-group-title {
-    display: none;
-}
-.home-scene #notes-list .palm-list .palm-group.unlabeled .palm-list {
-    margin: -8px -8px -8px -8px;
-}
-.home-scene #notes-list .palm-list .palm-group .first .palm-swipe-delete {
-    -webkit-border-image: url(file:///usr/palm/frameworks/mojo/submissions/191.14/images/palm-delete-group.png) 24 20 24 20 repeat repeat;
-}
-.home-scene #notes-list .palm-list .palm-group .last .palm-swipe-delete {
-    -webkit-border-image: url(file:///usr/palm/frameworks/mojo/submissions/191.14/images/palm-delete-group.png) 24 20 24 20 repeat repeat;
-}
-.home-scene #notes-list .palm-list .palm-group .palm-row.selected.first {
-  -webkit-border-image: url(file:///usr/palm/frameworks/mojo/submissions/191.14/images/selection-gradient-single.png) 24 20 24 20 repeat repeat;
-}
-.home-scene #notes-list .palm-list .palm-group .palm-row.selected.single {
-  -webkit-border-image: url(file:///usr/palm/frameworks/mojo/submissions/191.14/images/selection-gradient-single.png) 24 20 24 20 repeat repeat;
-}
-.home-scene #notes-list .palm-list .palm-group .palm-row.selected.last {
-  -webkit-border-image: url(file:///usr/palm/frameworks/mojo/submissions/191.14/images/selection-gradient-single.png) 24 20 24 20 repeat repeat;
-}
-*/

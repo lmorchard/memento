@@ -15,6 +15,7 @@
         ?>
         <li>
             <a href="<?=url::base() . 'notes/' . $u['uuid'] ?>;edit"><?=$h['name']?></a>
+            <?=gmdate('c', strtotime($h['modified'].'Z'))?>
             [<a href="<?=url::base() . 'notes/' . $u['uuid'] ?>;delete">delete</a>]
             [<a href="<?=url::base() . 'notes/' . $u['uuid'] ?>">raw</a>]
         </li>

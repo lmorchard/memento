@@ -3,7 +3,7 @@ $out = array();
 
 if (!empty($notes)) foreach ($notes as $note) {
     $a = array('href' => "notes/{$note->uuid}");
-    foreach (array('uuid', 'name', 'created', 'modified') as $name) {
+    foreach (array('uuid', 'etag', 'name', 'created', 'modified') as $name) {
         if ($name == 'created' || $name == 'modified') {
             $val = gmdate('c', strtotime($note->{$name} . 'Z'));
         } else {

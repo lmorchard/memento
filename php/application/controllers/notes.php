@@ -133,14 +133,16 @@ class Notes_Controller extends Rest_Controller
         if ('put' === request::method()) {
             if (!$this->note->loaded) {
                 // Require an If-[None-]Match header on blind save.
+                /*
                 if (!$this->input->server('HTTP_IF_MATCH', null) &&
                         !$this->input->server('HTTP_IF_NONE_MATCH', null)) {
                     return Event::run('system.403');
                 }
+                */
 
                 // PUT request is allowed to blindly save an unknown note.
                 $this->note = ORM::factory('note');
-                $this->note->uuid = $uuid;
+                $this->note->uuid = strtolower($uuid);
             }
         } else {
             if (!$this->note->loaded) {
@@ -198,10 +200,20 @@ class Notes_Controller extends Rest_Controller
     {
         $params = $this->getRequestParameters();
 
-        if (isset($params['name']))
+        if (isset($params['name'])) {
             $this->note->name = $params['name'];
-        if (isset($params['text']))
+        }
+        if (isset($params['text'])) {
             $this->note->text = $params['text'];
+        }
+        if (isset($params['created'])) {
+            $this->note->created = ('true' == $params['created']) ? 
+                gmdate('c') : $params['created']; 
+        }
+        if (isset($params['modified'])) {
+            $this->note->modified = ('true' == $params['modified']) ? 
+                gmdate('c') : $params['modified']; 
+        }
         $this->note->save();
 
         header('ETag: ' . $this->note->etag());

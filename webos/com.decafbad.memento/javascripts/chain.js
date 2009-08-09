@@ -3,16 +3,17 @@
  *
  * @author l.m.orchard@pobox.com
  */
-var Chain = Class.create({
+Chain = Class.create({
 
     /**
      * Constructor
      *
      * @param {array} List of functions for chain
      */
-    initialize: function (actions) {
+    initialize: function(actions, object) {
         this.running = null;
         this.actions = [];
+        this.object  = object;
 
         if (actions) { 
             for (var i=0, action; action=actions[i]; i++) {
@@ -22,29 +23,19 @@ var Chain = Class.create({
     },
 
     /**
-     * Push a new function onto the end of the chain.
+     * Push an action onto the list.
      *
-     * When called, this function will be passed a function that, when called,
-     * will cause the next function in the chain to be called.
-     *
-     * @param {function} Function for chain.
+     * @param {string|function}
      */
-    push: function (cb) {
-        var done = function () {
-            if (false == this.running) this.next();
-        }.bind(this);
-
-        this.actions.push(function ()  {
-            cb(done);
-        });
-
+    push: function(action) {
+        this.actions.push(action);
         return this;
     },
 
     /**
      * Start running the chain, starting with the first function.
      */
-    start: function ()  {
+    start: function()  {
         if (null !== this.running) return;
         this.running = false;
         this.next();
@@ -54,11 +45,27 @@ var Chain = Class.create({
     /** 
      * Run the next function in the chain.
      */
-    next: function ()  {
+    next: function()  {
         if (false !== this.running) return;
         if (!this.actions.length) return false;
+
         var action = this.actions.shift();
-        action();
+
+        var done = function() {
+            if (false == this.running) this.next();
+        }.bind(this);
+
+        if (typeof action == 'string') {
+            if (this.object && typeof this.object[action] == 'function') {
+                this.object[action](done);
+            }
+        } else if (typeof action == 'function') {
+            if (this.object) {
+                action.apply(this.object, [done]);
+            } else {
+                action(done);
+            }
+        }
         return this;
     },
 

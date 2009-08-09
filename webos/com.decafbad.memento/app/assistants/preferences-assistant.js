@@ -1,35 +1,86 @@
-function PreferencesAssistant() {
-	/* this is the creator function for your scene assistant object. It will be passed all the 
-	   additional parameters (after the scene name) that were passed to pushScene. The reference
-	   to the scene controller (this.controller) has not be established yet, so any initialization
-	   that needs the scene controller should be done in the setup function below. */
+/**
+ * Preferences scene assistant.
+ *
+ * @package    Memento
+ * @subpackage assistants
+ * @author     <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
+ */
+function PreferencesAssistant (note) {
+    this.prefs_model = Memento.preferences.get();
 }
 
-PreferencesAssistant.prototype.setup = function() {
+PreferencesAssistant.prototype = (function () {
+
+    return {
+
+        /**
+         * Set up the preferences scene.
+         */
+        setup: function() {
+
             this.controller.setupWidget(Mojo.Menu.appMenu, 
-                {omitDefaultItems: true}, appMenuModel);
+                Memento.app_menu.attr, Memento.app_menu.model);
 
-	/* this function is for setup tasks that have to happen when the scene is first created */
-		
-	/* use Mojo.View.render to render view templates and add them to the scene, if needed. */
-	
-	/* setup widgets here */
-	
-	/* add event handlers to listen to events from widgets */
-}
+            this.controller.setupWidget('sync_url', 
+                {
+                    modelProperty: 'sync_url',
+                    hintText: $L('http://memento.decafbad.com/')
+                },
+                this.prefs_model
+            );
 
-PreferencesAssistant.prototype.activate = function(event) {
-	/* put in event handlers here that should only be in effect when this scene is active. For
-	   example, key handlers that are observing the document */
-}
+            ['enabled','on_start','on_open','on_save','on_shutdown']
+                .each(function(name) {
+                    this.controller.setupWidget('sync_' + name, 
+                        { modelProperty: 'sync_' + name },
+                        this.prefs_model
+                    );
+                    this.controller.get('sync_' + name,
+                        Mojo.Event.propertyChange, this.savePrefs.bind(this)
+                    );
+                }, this);
 
+            this.controller.setupWidget('features_drawer',
+                { unstyled: true },
+                { open: this.prefs_model.sync_enabled }
+            );
 
-PreferencesAssistant.prototype.deactivate = function(event) {
-	/* remove any event handlers you added in activate and do any other cleanup that should happen before
-	   this scene is popped or another scene is pushed on top */
-}
+            this.controller.get('sync_enabled').observe(
+                Mojo.Event.propertyChange, function(ev) {
+                    this.controller.get('features_drawer').mojo.toggleState()
+                }.bind(this)
+            );
 
-PreferencesAssistant.prototype.cleanup = function(event) {
-	/* this function should do any cleanup needed before the scene is destroyed as 
-	   a result of being popped off the scene stack */
-}
+        },
+
+        /**
+         * Save the preferences model.
+         */
+        savePrefs: function() {
+            Memento.preferences.put(this.prefs_model);
+        },
+
+        /**
+         * On scene activation, save the model.
+         */
+        activate: function(event) {
+            this.savePrefs();
+        },
+
+        /**
+         * On scene deactivation, save the model.
+         */
+        deactivate: function(event) {
+            this.savePrefs();
+        },
+
+        /**
+         * On scene cleanup, save the model.
+         */
+        cleanup: function(event) {
+            this.savePrefs();
+        }
+
+    };
+
+}());

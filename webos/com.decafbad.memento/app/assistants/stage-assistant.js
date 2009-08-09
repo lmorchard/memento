@@ -1,16 +1,10 @@
 /**
+ * Main stage assistant
  *
+ * @package    Memento
+ * @subpackage assistants
+ * @author     <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
  */
-appMenuModel = {
-    visible: true,
-    items: [
-        Mojo.Menu.editItem,
-        { label: "Preferences", command: 'AppPreferences' },
-        { label: "About", command: 'AppAbout' },
-        //{ label: "Help", command: 'AppHelp' }
-    ]
-};
-
 function StageAssistant() {
 }
 
@@ -20,13 +14,16 @@ StageAssistant.prototype = (function () {
 
         setup: function () {
             if ('true'!==Mojo.Environment.frameworkConfiguration.testingEnabled) {
+
                 this.controller.pushScene('home');
+            
             } else {
+
                 // Hijack TestAssistant.updateResults to generate more logging
                 // spew in console.
                 var orig_fn = Mojo.Test.TestAssistant.prototype.updateResults;
                 Mojo.Test.TestAssistant.prototype.updateResults = function () {
-                    Mojo.log("Tests starting...");
+                    Mojo.log("Reporting test results...");
                     orig_fn.apply(this);
                     // TODO: Include the suite name here
                     this.resultsModel.items.each(function(item) {
@@ -38,6 +35,7 @@ StageAssistant.prototype = (function () {
                 };
 
                 Mojo.Test.pushTestScene(this.controller, { runAll: true });
+
             }
         },
 

@@ -40,12 +40,12 @@ NotesModelTests.prototype = function() {
          */
         testAddDelete: function(recordResults) {
             new Chain([
-                this._ensureEmpty.bind(this),
-                this._addNotes.bind(this),
-                this._deleteNotes.bind(this),
-                this._ensureEmpty.bind(this),
+                '_ensureEmpty',
+                '_addNotes',
+                '_deleteNotes',
+                '_ensureEmpty',
                 function() { recordResults(Mojo.Test.passed); }
-            ]).start();
+            ], this).start();
         },
 
         /**
@@ -53,12 +53,12 @@ NotesModelTests.prototype = function() {
          */
         testCreateAndAdd: function(recordResults) {
             new Chain([
-                this._ensureEmpty.bind(this),
-                this._createAndAddNotes.bind(this),
-                this._deleteNotes.bind(this),
-                this._ensureEmpty.bind(this),
+                '_ensureEmpty',
+                '_createAndAddNotes',
+                '_deleteNotes',
+                '_ensureEmpty',
                 function() { recordResults(Mojo.Test.passed); }
-            ]).start();
+            ], this).start();
         },
 
         /**
@@ -66,10 +66,10 @@ NotesModelTests.prototype = function() {
          */
         testFind: function(recordResults) {
             new Chain([
-                this._addNotes.bind(this),
-                this._checkSavedNotes.bind(this),
+                '_addNotes',
+                '_checkSavedNotes',
                 function() { recordResults(Mojo.Test.passed); }
-            ]).start();
+            ], this).start();
         },
 
         /**
@@ -77,10 +77,10 @@ NotesModelTests.prototype = function() {
          */
         testFindAll: function(recordResults) {
             new Chain([
-                this._addNotes.bind(this),
-                this._checkMultipleSavedNotes.bind(this),
+                '_addNotes',
+                '_checkMultipleSavedNotes',
                 function() { recordResults(Mojo.Test.passed); }
-            ]).start();
+            ], this).start();
         },
 
         /**
@@ -88,10 +88,10 @@ NotesModelTests.prototype = function() {
          */
         testModificationDates: function (recordResults) {
             new Chain([
-                this._addNotes.bind(this),
-                this._checkModificationDates.bind(this),
+                '_addNotes',
+                '_checkModificationDates',
                 function() { recordResults(Mojo.Test.passed); }
-            ]).start();
+            ], this).start();
         },
 
         /**

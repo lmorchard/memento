@@ -1,8 +1,15 @@
 /**
  * Single note scene assistant.
+ *
+ * @package    Memento
+ * @subpackage assistants
+ * @author     <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
  */
 function NoteAssistant (note) {
-    this.notes_model = new NotesModel();
+    this.prefs = Memento.preferences.get();
+    this.notes_model   = new NotesModel();
+    this.notes_service = new Memento.Service(this.prefs.sync_url);
+    this.notes_sync    = new Memento.Sync(this.notes_model, this.notes_service);
     this.note = note;
 }
 
@@ -13,7 +20,7 @@ NoteAssistant.prototype = (function () {
         setup: function () {
 
             this.controller.setupWidget(Mojo.Menu.appMenu, 
-                {omitDefaultItems: true}, appMenuModel);
+                Memento.app_menu.attr, Memento.app_menu.model);
 
             this.controller.setupWidget(
                 "name", {
@@ -42,10 +49,16 @@ NoteAssistant.prototype = (function () {
                 );
             }, this);
 
+            // TODO: Find a way to translate taps on stage into text focus
+            /*
+            this.controller.get('main').observe(
+                Mojo.Event.tap, this.focusText.bind(this)
+            );
+            */
+
         },
 
         focusText: function(ev) {
-            Mojo.log("FOCUS TEXT");
             this.controller.get('text').focus();
         },
         
@@ -55,18 +68,27 @@ NoteAssistant.prototype = (function () {
                 return;
             }
             this.notes_model.save(
-                this.note,
-                function(note) { }
+                this.note, function(note) { }
+            );
+            this.notes_service.saveNote(
+                this.note, false, 
+                function(note) { 
+                    Mojo.log("SAVED UPDATED NOTE " + this.note.uuid + ' ' + this.note.etag) 
+                },
+                function(note) { Mojo.log("FAILED UPDATED NOTE " + this.note.uuid) }
             );
         },
 
         activate: function (event) {
+            this.saveChanges();
         },
 
         deactivate: function (event) {
+            this.saveChanges();
         },
 
         cleanup: function (event) {
+            this.saveChanges();
         }
 
     };

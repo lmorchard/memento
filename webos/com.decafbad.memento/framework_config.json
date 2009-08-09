@@ -2,5 +2,5 @@
 	"logLevel": "99",
 	"timingEnabled": "true",
     "debuggingEnabled": "true",
-    "testingEnabled": "false"
+    "testingEnabled": "true"
 }

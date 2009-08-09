@@ -1,10 +1,16 @@
 /**
  * Home scene assistant.
+ *
+ * @package    Memento
+ * @subpackage assistants
+ * @author     <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
  */
 function HomeAssistant() {
-    this.notes_model = new NotesModel();
+    this.prefs = Memento.preferences.get();
+    this.notes_model   = new NotesModel();
+    this.notes_service = new Memento.Service(this.prefs.sync_url);
+    this.notes_sync    = new Memento.Sync(this.notes_model, this.notes_service);
 }
-
 HomeAssistant.prototype = (function () {
 
     return {
@@ -14,67 +20,74 @@ HomeAssistant.prototype = (function () {
          */
         setup: function () {
 
+            // Set up the common app menu.
             this.controller.setupWidget(Mojo.Menu.appMenu, 
-                {omitDefaultItems: true}, appMenuModel);
-
-            this.notes = [];
-
+                Memento.app_menu.attr, Memento.app_menu.model);
+        
+            // Set up the notes list on home scene.
+            this.list_order = 'bydate';
             this.list_model = {
                 listTitle: $L('Notes'), items: []
             };
-
-            var list_props = {
+            var list_attrs = {
                 swipeToDelete: true,
-                reorderable:   true,
+                reorderable:   false,
                 itemTemplate:  'home/list-item',
                 listTemplate:  'home/list-container',
                 emptyTemplate: 'home/list-empty',
-                filterFunction: this.filterNotes.bind(this),
                 formatters: {
                     modified: this.formatDate
                 }
             }
-
             this.controller.setupWidget(
-                "notes-list", list_props, this.list_model
+                "notes-list", list_attrs, this.list_model
             );
 
+            // Connect up the tap and delete events.
             var notes_list = this.controller.get('notes-list');
-
             notes_list.observe(Mojo.Event.listTap, function(ev) {
                 this.openNoteByUUID(ev.item.uuid);
             }.bind(this));
-
             notes_list.observe(Mojo.Event.listDelete, function(ev) {
                 this.deleteNoteByUUID(ev.item.uuid);
             }.bind(this));
 
-            var command_menu_model = {items: [
-                { label: $L('+ New ...'), /*icon: 'new-note',*/ command:'NewNote' },
-            ]};
+            // Wire up the sort order selector in the header.
+            this.controller.get('sort-selector').observe(
+                Mojo.Event.tap, this.showSortMenu.bind(this)
+            );
 
+            // Set up the new note command button.
+            var command_menu_model = {items: [
+                { label: $L('+ New ...'), icon: 'new-note', command:'NewNote' },
+            ]};
             this.controller.setupWidget(
                 Mojo.Menu.commandMenu, {}, command_menu_model
             );
 
+            this.notes_sync.startSync(
+                function() {
+                    Mojo.log('Notes sync completed');
+                },
+                function(json, resp) {
+                    Mojo.log('Notes sync FAILED');
+                    Mojo.log('FOO ' + resp.status);
+                }
+            );
+
+            // Fire off the initial update of note items from model.
+            this.updateList();
         },
 
         /**
          * Convert a date to a human-friendly string.
          */
         formatDate: function(date, model) {
-            var dt  = new Date(date),
-                now = new Date();
+            var now = new Date(),
+                dt  = (new Date()).setISO8601(date);
             if (dt.toDateString() === now.toDateString())
                 return "Today, " + new SimpleDateFormat("h:mm a").format(dt);
             return new SimpleDateFormat("MMMM d, yyyy h:mm a").format(dt);
-        },
-
-        /**
-         * Open a given note in the editing scene.
-         */
-        openNote: function(note) {
-            this.controller.stageController.pushScene('note', note);
         },
 
         /**
@@ -82,6 +95,20 @@ HomeAssistant.prototype = (function () {
          */
         openNoteByUUID: function(uuid) {
             this.notes_model.find(uuid, this.openNote.bind(this));
+        },
+        /**
+         * Open a given note in the editing scene.
+         */
+        openNote: function(note) {
+
+            Mojo.Controller.getAppController().createStageWithCallback(
+                {name: 'memento-note-' + note.uuid, lightweight: true},
+                function(stageController) {
+                    stageController.pushScene('note', note);
+                }
+            );
+                      
+            //this.controller.stageController.pushScene('note', note);
         },
 
         /**
@@ -96,40 +123,68 @@ HomeAssistant.prototype = (function () {
         },
 
         /**
+         * Available sort choices for notes.
+         */
+        available_sorts: $H({
+            'bydate': {
+                label: 'By date',
+                cmp: function(b,a) {
+                    var av = a['modified'], bv = b['modified'];
+                    return (av<bv) ? -1 : ( (av>bv) ? 1 : 0 );
+                }
+            },
+            'byalpha': {
+                label: 'By alpha',
+                cmp: function(a,b) {
+                    var av = a['name'], bv = b['name'];
+                    return (av<bv) ? -1 : ( (av>bv) ? 1 : 0 );
+                }
+            }
+        }),
+
+        /**
+         * Show the sort menu in response to tapping the header button.
+         */
+        showSortMenu: function(ev) {
+            var items = [];
+            this.available_sorts.each(function(pair) {
+                items.push({command: pair.key, label: pair.value.label});
+            }, this);
+
+            this.controller.popupSubmenu({
+                onChoose: function (order) {
+                    if (order) {
+                        this.list_order = order;
+                        var sort = this.available_sorts.get(order)
+                        this.controller.get('sort-selector')
+                            .update(sort.label);
+                        this.refreshList();
+                    }
+                }.bind(this),
+                manualPlacement: true,
+                popupClass: 'sort-selector-menu',
+                items: items
+            });
+        },
+
+        /**
          * Update the list by finding notes in the model.
          */
         updateList: function() {
-
             this.notes_model.findAll(
                 null, null, null,
-
                 function(notes) {
                     try {
-                        this.notes = notes;
-                        this.list_model.items = this.notes;
+                        this.list_model.items = notes;
                         this.refreshList();
                     } catch (e) {
                         Mojo.Log.logException(e);
                     }
                 }.bind(this),
-                
                 function() { 
                     Mojo.Log.error('NotesModel findAll() failure') 
                 }.bind(this)
-
             );
-
-        },
-
-        /**
-         * Filter notes in the list according to the filter string entered.
-         */
-        filterNotes: function (filterString, list_widget, offset, count) {
-            var matching, lowerFilter;
-            matching = this.notes;
-
-            this.list_model.items = matching;			
-            this.refreshList(matching, 0, matching.length);
         },
 
         /**
@@ -140,10 +195,12 @@ HomeAssistant.prototype = (function () {
             if (!offset) offset = 0;
             if (!count) count = notes.length;
 
+            // TODO: Implement this in the DB eventually?
+            var sort_func = this.available_sorts.get(this.list_order).cmp;
+            this.list_model.items.sort(sort_func);
+
             var list_widget = this.controller.get('notes-list');
-            list_widget.mojo.setLength(count);
-            list_widget.mojo.setCount(count);
-            list_widget.mojo.noticeUpdatedItems(offset, notes);
+            list_widget.mojo.noticeUpdatedItems(offset, this.list_model.items);
         },
 
         /**
@@ -176,6 +233,7 @@ HomeAssistant.prototype = (function () {
          * On scene deactivation, do...
          */
         deactivate: function (event) {
+            this.updateList();
         },
 
         /**
