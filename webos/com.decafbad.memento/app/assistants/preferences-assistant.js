@@ -5,8 +5,9 @@
  * @subpackage assistants
  * @author     <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
  */
-function PreferencesAssistant (note) {
-    this.prefs_model = Memento.preferences.get();
+var Mojo, Memento, $L;
+
+function PreferencesAssistant(note) {
 }
 
 PreferencesAssistant.prototype = (function () {
@@ -16,7 +17,7 @@ PreferencesAssistant.prototype = (function () {
         /**
          * Set up the preferences scene.
          */
-        setup: function() {
+        setup: function () {
 
             this.controller.setupWidget(Mojo.Menu.appMenu, 
                 Memento.app_menu.attr, Memento.app_menu.model);
@@ -26,14 +27,14 @@ PreferencesAssistant.prototype = (function () {
                     modelProperty: 'sync_url',
                     hintText: $L('http://memento.decafbad.com/')
                 },
-                this.prefs_model
+                Memento.prefs
             );
 
-            ['enabled','on_start','on_open','on_save','on_shutdown']
-                .each(function(name) {
+            ['enabled', 'on_start', 'on_open', 'on_save', 'on_delete', 'on_shutdown']
+                .each(function (name) {
                     this.controller.setupWidget('sync_' + name, 
                         { modelProperty: 'sync_' + name },
-                        this.prefs_model
+                        Memento.prefs
                     );
                     this.controller.get('sync_' + name,
                         Mojo.Event.propertyChange, this.savePrefs.bind(this)
@@ -42,12 +43,12 @@ PreferencesAssistant.prototype = (function () {
 
             this.controller.setupWidget('features_drawer',
                 { unstyled: true },
-                { open: this.prefs_model.sync_enabled }
+                { open: Memento.prefs.sync_enabled }
             );
 
             this.controller.get('sync_enabled').observe(
-                Mojo.Event.propertyChange, function(ev) {
-                    this.controller.get('features_drawer').mojo.toggleState()
+                Mojo.Event.propertyChange, function (ev) {
+                    this.controller.get('features_drawer').mojo.toggleState();
                 }.bind(this)
             );
 
@@ -56,29 +57,19 @@ PreferencesAssistant.prototype = (function () {
         /**
          * Save the preferences model.
          */
-        savePrefs: function() {
-            Memento.preferences.put(this.prefs_model);
+        savePrefs: function () {
+            Memento.prefs_cookie.put(Memento.prefs);
         },
 
-        /**
-         * On scene activation, save the model.
-         */
-        activate: function(event) {
+        activate: function (event) {
             this.savePrefs();
         },
 
-        /**
-         * On scene deactivation, save the model.
-         */
-        deactivate: function(event) {
+        deactivate: function (event) {
             this.savePrefs();
         },
 
-        /**
-         * On scene cleanup, save the model.
-         */
-        cleanup: function(event) {
-            this.savePrefs();
+        cleanup: function (event) {
         }
 
     };

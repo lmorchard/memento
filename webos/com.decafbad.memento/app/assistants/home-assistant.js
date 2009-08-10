@@ -6,10 +6,7 @@
  * @author     <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
  */
 function HomeAssistant() {
-    this.prefs = Memento.preferences.get();
-    this.notes_model   = new NotesModel();
-    this.notes_service = new Memento.Service(this.prefs.sync_url);
-    this.notes_sync    = new Memento.Sync(this.notes_model, this.notes_service);
+    Memento.home_assistant = this;
 }
 HomeAssistant.prototype = (function () {
 
@@ -65,18 +62,15 @@ HomeAssistant.prototype = (function () {
                 Mojo.Menu.commandMenu, {}, command_menu_model
             );
 
-            this.notes_sync.startSync(
-                function() {
-                    Mojo.log('Notes sync completed');
-                },
-                function(json, resp) {
-                    Mojo.log('Notes sync FAILED');
-                    Mojo.log('FOO ' + resp.status);
-                }
-            );
+            if (Memento.sync_enabled && Memento.prefs.sync_on_start) {
+                Mojo.log("Sync on start enabled...");
+                this.performSync();
+            } else {
+                // Fire off the initial update of note items from model.
+                Mojo.log("Sync on start disabled, skipping.");
+                this.updateList();
+            }
 
-            // Fire off the initial update of note items from model.
-            this.updateList();
         },
 
         /**
@@ -94,20 +88,59 @@ HomeAssistant.prototype = (function () {
          * Open a given note in the editing scene, first looking it up by UUID.
          */
         openNoteByUUID: function(uuid) {
-            this.notes_model.find(uuid, this.openNote.bind(this));
+            Memento.notes_model.find(uuid, this.openNote.bind(this));
         },
+
         /**
-         * Open a given note in the editing scene.
+         * Open a given note in the editing scene, after a possible check
+         * against the remote service.
          */
         openNote: function(note) {
+            Mojo.log("Opening note " + note.uuid);
+            if (!Memento.prefs.sync_enabled || !Memento.prefs.sync_on_open) {
+                
+                Mojo.log("Skipping remote note check");
+                return this._pushNoteScene(note);
 
+            } else {
+
+                // Try fetching the remote note with etag-based conditional
+                // get, update the note to be opened only if the remote has
+                // changed.
+                Memento.notes_service.findNote(
+                    note.uuid, note.etag,
+                    function(remote_note, resp) {
+                        if ('304' == resp.status) {
+                            // Use the local note if remote not modified.
+                            Mojo.log("Note unmodified on remote");
+                        } else {
+                            // If the note was updated, use the remote one.
+                            Mojo.log("Note changed on remote");
+                            note = remote_note;
+                        }
+                        return this._pushNoteScene(note);
+                    }.bind(this),
+                    function(resp) {
+                        // There was an error fetching from remote, but open
+                        // the local note anyway.  Later syncs will sort it out.
+                        Mojo.Log.error("Error fetching note from remote");
+                        return this._pushNoteScene(note);
+                    }.bind(this)
+
+                );
+            }
+        },
+
+        /**
+         * Open the given note in the editing scene.
+         */
+        _pushNoteScene: function(note) {
             Mojo.Controller.getAppController().createStageWithCallback(
                 {name: 'memento-note-' + note.uuid, lightweight: true},
                 function(stageController) {
                     stageController.pushScene('note', note);
                 }
             );
-                      
             //this.controller.stageController.pushScene('note', note);
         },
 
@@ -115,11 +148,24 @@ HomeAssistant.prototype = (function () {
          * Delete a given note, first looking it up by UUID.
          */
         deleteNoteByUUID: function(uuid) {
-            this.notes_model.find(uuid, function(note) {
-                this.notes_model.del(note, function() { 
-                    this.updateList() 
-                }.bind(this)
-            )}.bind(this));
+            Memento.notes_model.find(uuid, function(note) {
+                Memento.notes_model.del(note, function() { 
+                    this.updateList();
+                    if (!Memento.prefs.sync_enabled || !Memento.prefs.sync_on_delete) {
+                        Mojo.log("Skipping remote delete for %s", note.uuid);
+                    } else {
+                        Memento.notes_service.deleteNote(
+                            note.uuid, note.etag, false,
+                            function () {
+                                Mojo.log("Deleted %s from remote", note.uuid);
+                            },
+                            function () {
+                                Mojo.Log.error("Error deleting remote %s", note.uuid);
+                            }
+                        );
+                    }
+                }.bind(this));
+            }.bind(this));
         },
 
         /**
@@ -168,10 +214,29 @@ HomeAssistant.prototype = (function () {
         },
 
         /**
+         * Perform notes sync.
+         */
+        performSync: function() {
+            if (!Memento.prefs.sync_enabled) {
+                this.updateList();
+            } else {
+                Memento.notes_sync.startSync(
+                    function() {
+                        Mojo.log('Notes sync completed');
+                        this.updateList();
+                    }.bind(this),
+                    function(json) {
+                        Mojo.Log.error('Notes sync FAILED');
+                    }.bind(this)
+                );
+            }
+        },
+
+        /**
          * Update the list by finding notes in the model.
          */
         updateList: function() {
-            this.notes_model.findAll(
+            Memento.notes_model.findAll(
                 null, null, null,
                 function(notes) {
                     try {
@@ -226,7 +291,7 @@ HomeAssistant.prototype = (function () {
          * On scene activation, update the notes list.
          */
         activate: function (event) {
-            this.updateList();
+            this.performSync();
         },
 
         /**

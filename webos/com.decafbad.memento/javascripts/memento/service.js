@@ -30,7 +30,8 @@ Memento.Service.prototype = function() {
                 method: 'DELETE',
                 // Only a 410 status is actually considered a success.
                 on410:     on_success,
-                onSuccess: on_failure, onFailure: on_failure
+                onSuccess: on_failure, 
+                onFailure: on_failure
             });
         },
 
@@ -42,15 +43,25 @@ Memento.Service.prototype = function() {
             });
         },
 
-        findNote: function(uuid, on_success, on_failure) {
+        findNote: function(uuid, etag, on_success, on_failure) {
             var url = this.options.service_url + 'notes/' + uuid;
+            var headers = {};
+            if (etag) {
+                headers['If-None-Match'] = etag;
+            }
             new Ajax.JSONRequest(url, {
                 method: 'GET',
+                requestHeaders: headers,
                 onSuccess: function(data, resp) {
                     data.etag = resp.getHeader('etag');
-                    on_success(data);
+                    on_success(data, resp);
                 }, 
-                onFailure: on_failure
+                on304: function(resp) {
+                    on_success(null, resp);
+                },
+                onFailure: function(data, resp) {
+                    on_failure();
+                }
             });
         },
 
@@ -62,7 +73,23 @@ Memento.Service.prototype = function() {
             });
         },
 
-        // TODO: Need an over-write flag and errors on specific 412
+        deleteNote: function(uuid, etag, force_delete, on_success, on_failure) {
+            var url = this.options.service_url + 'notes/' + uuid;
+            var headers = {};
+            if (!force_delete && etag) {
+                // Make sure to only delete what we think we're deleting.
+                headers['If-Match'] = etag;
+            }
+            new Ajax.JSONRequest(url, {
+                method: 'DELETE',
+                requestHeaders: headers,
+                // Only a 410 status is actually considered a success.
+                on410:     on_success,
+                onSuccess: on_failure,
+                onFailure: on_failure
+            });
+        },
+
         saveNote: function(data, force_overwrite, on_success, on_failure) {
             var url = this.options.service_url + 'notes/' + data.uuid;
             var headers = {};

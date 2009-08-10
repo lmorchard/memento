@@ -13,29 +13,26 @@ StageAssistant.prototype = (function () {
     return {
 
         setup: function () {
-            if ('true'!==Mojo.Environment.frameworkConfiguration.testingEnabled) {
+            // Hijack TestAssistant.updateResults to generate more logging
+            // spew in console.
+            var orig_fn = Mojo.Test.TestAssistant.prototype.updateResults;
+            Mojo.Test.TestAssistant.prototype.updateResults = function () {
+                Mojo.log("Reporting test results...");
+                orig_fn.apply(this);
+                // TODO: Include the suite name here
+                this.resultsModel.items.each(function(item) {
+                    Mojo.log("    %s: %s", item.method, item.message);
+                }.bind(this));
+                Mojo.log("Tests complete @ " + 
+                    Mojo.Format.formatDate(new Date(), {time: 'medium'}));
+                Mojo.log("Summary: %s", this.makeSummary(this.runner.results));
+            };
 
-                this.controller.pushScene('home');
-            
-            } else {
-
-                // Hijack TestAssistant.updateResults to generate more logging
-                // spew in console.
-                var orig_fn = Mojo.Test.TestAssistant.prototype.updateResults;
-                Mojo.Test.TestAssistant.prototype.updateResults = function () {
-                    Mojo.log("Reporting test results...");
-                    orig_fn.apply(this);
-                    // TODO: Include the suite name here
-                    this.resultsModel.items.each(function(item) {
-                        Mojo.log("    " + item.method + ": " + item.message);
-                    }.bind(this));
-                    Mojo.log("Tests complete @ " + 
-                        Mojo.Format.formatDate(new Date(), {time: 'medium'}));
-                    Mojo.log("Summary: " + this.makeSummary(this.runner.results));
-                };
-
+            if ('true'==Mojo.Environment.frameworkConfiguration.testsEnabled &&
+                    'true'==Mojo.Environment.frameworkConfiguration.runTestsAtLaunch) {
                 Mojo.Test.pushTestScene(this.controller, { runAll: true });
-
+            } else {
+                this.controller.pushScene('home');
             }
         },
 
@@ -62,6 +59,10 @@ StageAssistant.prototype = (function () {
                     case 'AppPreferences':
                         Mojo.Controller.stageController
                             .pushScene("preferences", this);
+                        break;
+
+                    case 'AppTests':
+                        Mojo.Test.pushTestScene(this.controller, { runAll: true });
                         break;
 
                     case 'do-help':

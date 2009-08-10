@@ -15,6 +15,9 @@ Note = Class.create({
                 this[name] = data[name];
         }, this);
 
+        if (!this.uuid) {
+            this.uuid = Math.uuid().toLowerCase();
+        }
         if (!this.created) {
             this.created = (new Date()).toISO8601String();
         }
@@ -29,7 +32,7 @@ NotesModel = (function() {
 
     var DEFAULT_DEPOT = 'Memento_Data';
     var NOTES_BUCKET  = 'notes';
-    var NOTES_FILTERS = ['name', 'text', 'created', 'modified'];
+    var NOTES_FILTERS = []; //'name', 'text', 'created', 'modified'];
 
     return Class.create({
 
@@ -104,22 +107,7 @@ NotesModel = (function() {
             );
         },
 
-        delAll: function(on_success, on_fail) {
-            this.depot.getMultiple(
-                NOTES_BUCKET, null, null, null,
-                function (notes) { 
-                    var chain = new Chain([], this);
-                    notes.each(function(note) {
-                        chain.push(function(done) {
-                            this.depot.remove(NOTES_BUCKET, note.uuid, done, on_fail);
-                        });
-                    }, this);
-                    chain.push(on_success).start();
-                }.bind(this),
-                on_fail
-            );
-        },
-
+        EOF:null
     });
 
 }());

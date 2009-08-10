@@ -14,6 +14,7 @@ AppAssistant.prototype = (function() {
 
         setup: function() {
             Mojo.log("APP ASSISTANT SETUP");
+            Memento.init();
         },
 
         handleLaunch: function(launch_params) {

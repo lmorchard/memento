@@ -8,6 +8,41 @@ function NotesModelTests(tickleFunction) {
     this.initialize(tickleFunction);
 }
 NotesModelTests.prototype = function() {
+
+    var test_model_data = [
+        // Match newer than service
+        {
+            uuid:     "a-001",
+            name:     "alpha",
+            text:     "This is note alpha (model)",
+            created:  "2009-08-07T03:00:20+00:00",
+            modified: "2009-08-07T04:00:00+00:00"
+        },
+        // Match older than service.
+        {
+            uuid:     "b-001",
+            name:     "beta",
+            text:     "This is note beta (model)",
+            created:  "2009-08-07T05:00:20+00:00",
+            modified: "2009-08-07T06:00:00+00:00"
+        },
+        // Same everything.
+        {
+            uuid:     "d-001",
+            name:     "delta",
+            text:     "This is note delta",
+            created:  "2009-08-07T03:00:20+00:00",
+            modified: "2009-08-07T04:00:00+00:00"
+        },
+        // Unique to model
+        {
+            uuid:     "g-001",
+            name:     "gamma",
+            text:     "This is note gamma (model)",
+            created:  "2009-08-07T03:00:20+00:00",
+            modified: "2009-08-07T04:00:00+00:00"
+        }
+    ];
         
     return {
 
@@ -22,17 +57,6 @@ NotesModelTests.prototype = function() {
 
             this.notes = [];
             this.by_id = {};
-
-            this.test_data = [
-                'alpha', 'beta', 'gamma', 'delta', 'epsilon', 
-                'frank', 'george', 'herbert', 'ian', 'jack'
-            ].map(function (name, idx) {
-                return {
-                    name: name,
-                    text: 'This is sample text for ' + name
-                };
-            }, this);
-           
         },
 
         /**
@@ -118,7 +142,7 @@ NotesModelTests.prototype = function() {
         _addNotes: function (main_done) {
             var chain = new Chain();
 
-            this.test_data.each(function (data) {
+            test_model_data.each(function (data) {
                 chain.push(function (done) {
 
                     var check_note = function (note) {
@@ -159,7 +183,7 @@ NotesModelTests.prototype = function() {
         _createAndAddNotes: function (main_done) {
             var chain = new Chain();
 
-            this.test_data.each(function (data) {
+            test_model_data.each(function (data) {
                 chain.push(function (done) {
 
                     var check_note = function (note) {
@@ -207,7 +231,7 @@ NotesModelTests.prototype = function() {
             this.notes.each(function (expected_note) {
                 chain.push(function (done) { 
 
-                    var check_note = function(result_note) {
+                    var check_note = function(result_note, resp) {
                         prop_names.each(function(name) {
                             Mojo.requireEqual(
                                 result_note[name], expected_note[name],
@@ -283,6 +307,7 @@ NotesModelTests.prototype = function() {
                 chain.push(function(done) {
                     note.name += '_changed';
                     note.text = 'Changed note ' + note.name;
+                    delete note.modified;
 
                     this.tickleFunction();
                     this.notes_model.save(
@@ -290,7 +315,8 @@ NotesModelTests.prototype = function() {
                         function(saved) {
                             Mojo.require(
                                 orig_modified !== saved.modified,
-                                "Saved modification date should differ"
+                                "Saved modification date should differ " +
+                                orig_modified + ' != ' + saved.modified
                             );
                             done();
                         }.bind(this),
@@ -313,8 +339,7 @@ NotesModelTests.prototype = function() {
 
             }, this);
 
-            chain.push(main_done);
-            chain.start();
+            chain.push(main_done).start();
         },
 
         /**

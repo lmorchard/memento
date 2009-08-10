@@ -10,64 +10,6 @@ function MementoSyncTests(tickleFunction) {
 
 MementoSyncTests.prototype = function() {
 
-    var uuid_cmp = function(a,b) {
-        var av = a['uuid'], bv = b['uuid'];
-        return (av<bv) ? -1 : ( (av>bv) ? 1 : 0 );
-    }
-
-    // Common mock storage class.
-    var Mock_Store = Class.create({
-        name: 'Store',
-        initialize: function(test_data) {
-            this.test_data = test_data;
-        },
-        findAll: function(filters, limit, offset, on_success, on_fail) {
-            // Reduce the test data down to summary metadata, since that's all
-            // we should expect from the model or service.
-            var out = this.test_data.map(function(item) {
-                return {
-                    uuid:     item.uuid,
-                    created:  item.created,
-                    modified: item.modified
-                }
-            });
-            on_success(out);
-        },
-        find: function(uuid, on_success, on_fail) {
-            var found = this.test_data.filter(function(item) {
-                return item.uuid == uuid;
-            });
-            on_success(found.length > 0 ? found[0] : null);
-        },
-        save: function (data, on_success, on_fail) {
-            var new_data = this.test_data.filter(function(item) {
-                return item.uuid != data.uuid;
-            })
-            new_data.push(data);
-            this.test_data = new_data;
-            on_success(data);
-        }
-    });
-
-    // Mock local model.
-    var Mock_NotesModel = Class.create(Mock_Store, {
-        name: 'Model'
-    });
-
-    // Mock remote service.
-    var Mock_MementoService = Class.create(Mock_Store, {
-        name: 'Service',
-        findAllNotes: function(on_success, on_failure) {
-            return this.findAll(null,null,null, on_success, on_failure);
-        },
-        findNote: function(uuid, on_success, on_failure) {
-            return this.find(uuid, on_success, on_failure);
-        },
-        saveNote: function(data, on_success, on_failure) {
-            return this.save(data, on_success, on_failure);
-        }
-    });
-
     var test_service_data = [
         // Match older than model
         {
@@ -176,6 +118,77 @@ MementoSyncTests.prototype = function() {
         }
     ];
 
+    var uuid_cmp = function(a,b) {
+        var av = a['uuid'], bv = b['uuid'];
+        return (av<bv) ? -1 : ( (av>bv) ? 1 : 0 );
+    }
+
+    // Common mock storage class.
+    var Mock_Store = Class.create({
+        name: 'Store',
+        initialize: function(test_data) {
+            this.test_data = test_data;
+        },
+        findAll: function(filters, limit, offset, on_success, on_fail) {
+            // Reduce the test data down to summary metadata, since that's all
+            // we should expect from the model or service.
+            var out = this.test_data.map(function(item) {
+                return {
+                    uuid:     item.uuid,
+                    created:  item.created,
+                    modified: item.modified
+                }
+            });
+            on_success(out);
+        },
+        find: function(uuid, on_success, on_fail) {
+            var found = this.test_data.filter(function(item) {
+                return item.uuid == uuid;
+            });
+            on_success(found.length > 0 ? found[0] : null);
+        },
+        save: function (data, on_success, on_fail) {
+            var new_data = this.test_data.filter(function(item) {
+                return item.uuid != data.uuid;
+            })
+            new_data.push(data);
+            this.test_data = new_data;
+            on_success(data);
+        }
+    });
+
+    // Mock local model.
+    var Mock_NotesModel = Class.create(Mock_Store, {
+        name: 'Model'
+    });
+
+    // Mock remote service.
+    var Mock_MementoService = Class.create(Mock_Store, {
+        name: 'Service',
+        findAllNotes: function(on_success, on_failure) {
+            return this.findAll(null,null,null, on_success, on_failure);
+        },
+        findNote: function(uuid, on_success, on_failure) {
+            return this.find(uuid, on_success, on_failure);
+        },
+        saveNote: function(data, on_success, on_failure) {
+            return this.save(data, on_success, on_failure);
+        }
+    });
+
+    // Monkey patch the JSONRequest class to set the test environment
+    // override header.
+    var orig_json_request = Ajax.JSONRequest;
+    Ajax.JSONRequest = Class.create(orig_json_request, {
+        initialize: function($super, url, options) {
+            if (!options.requestHeaders) {
+                options.requestHeaders = {};
+            }
+            options.requestHeaders['X-Environment-Override'] = 'tests';
+            $super(url, options);
+        }
+    });
+        
     // The test class begins...
     return {
 
@@ -193,8 +206,8 @@ MementoSyncTests.prototype = function() {
          */
         testFullSync: function(recordResults) {
             new Chain([
-                //'_setupModel',
-                '_createMockModel',
+                '_setupModel',
+                //'_createMockModel',
                 '_setupService',
                 //'_createMockService',
                 '_performAndVerifyFullSync',
@@ -202,27 +215,30 @@ MementoSyncTests.prototype = function() {
             ], this).start();
         },
 
+        /**
+         * Set up the model by clearing it and loading it up with test data.
+         */
         _setupModel: function(done) {
-            this.model = new NotesModel();
+            this.model = new NotesModel('Memento_Notes_Test');
+            this.model.reset();
 
             var chain = new Chain([], this);
-            
-            chain.push(function(sub_done) {
-                this.model.delAll(sub_done, 
-                    function() { throw "model deleteall failed!"; });
-            });
             
             test_model_data.each(function(item) {
                 chain.push(function(sub_done) {
                     this.model.save(
-                        item, sub_done, 
-                        function() { throw "model save failed!"; });
+                        item, sub_done,
+                        function() { throw "model save failed!"; }
+                    );
                 })
             }.bind(this));
             
             chain.push(done).start();
         },
 
+        /**
+         * Set up the service by clearing it and loading it up with test data.
+         */
         _setupService: function(done) {
             this.service = new Memento.Service('http://dev.memento.decafbad.com/');
 
@@ -249,9 +265,7 @@ MementoSyncTests.prototype = function() {
          * Build a mock model with test data.
          */
         _createMockModel: function(done) {
-
             this.model = new Mock_NotesModel(test_model_data);
-
             done();
         },
 
@@ -276,7 +290,7 @@ MementoSyncTests.prototype = function() {
                 '_startFullSync',
                 '_verifyLocalNotes',
                 '_verifyRemoteNotes',
-                function(sub_done) { done() }
+                done
             ], this).start();
         },
 
@@ -302,8 +316,8 @@ MementoSyncTests.prototype = function() {
             this.model.findAll(
                 null, null, null,
                 function(items) {
-
                     items.each(function(item) {
+
                         sub_chain.push(function(sub_sub_done) {
                             this.tickleFunction();
                             this.model.find(item.uuid, 
@@ -314,17 +328,19 @@ MementoSyncTests.prototype = function() {
                                 function() { throw "Model find failed!"; }
                             );
                         });
-                    }, this) 
+
+                    }, this);
 
                     // Once all the fetches have completed, verify the 
                     // accumlated data against expectations.
                     sub_chain.push(function(sub_sub_done) {
+                        Mojo.log('Verify local data');
                         this._assertItems(expected_data, result_notes);
-                        sub_done();
+                        Mojo.log('Local data verified');
+                        sub_sub_done();
                     });
 
-                    sub_chain.start();
-
+                    sub_chain.push(sub_done).start();
                 }.bind(this),
                 function() { throw "Model findAll failed!"; }
             );
@@ -343,9 +359,10 @@ MementoSyncTests.prototype = function() {
             this.service.findAllNotes(
                 function(items) { 
                     items.each(function(item) {
+
                         sub_chain.push(function(sub_sub_done) {
                             this.tickleFunction();
-                            this.service.findNote(item.uuid, 
+                            this.service.findNote(item.uuid, false,
                                 function(item) {
                                     result_notes.push(item); 
                                     sub_sub_done();
@@ -353,16 +370,19 @@ MementoSyncTests.prototype = function() {
                                 function() { throw "Service find failed!"; }
                             );
                         });
+
                     }, this) 
                     
                     // Once all the fetches have completed, verify the 
                     // accumlated data against expectations.
                     sub_chain.push(function(sub_sub_done) {
+                        Mojo.log('Verify remote data');
                         this._assertItems(expected_data, result_notes);
-                        sub_done();
+                        Mojo.log('Remote data verified');
+                        sub_sub_done();
                     });
 
-                    sub_chain.start();
+                    sub_chain.push(sub_done).start();
                 }.bind(this),
                 function() { throw "Service findAll failed!"; }
             );
@@ -376,7 +396,11 @@ MementoSyncTests.prototype = function() {
             expected_data.sort(uuid_cmp);
             result_data.sort(uuid_cmp);
 
+            Mojo.log('EXPECTED: %j', expected_data);
+            Mojo.log('RESULT: %j', result_data);
+
             expected_data.each(function(expected_note, idx) {
+                this.tickleFunction();
             
                 var result_note = result_data[idx];
                 $H(expected_note).each(function(pair) {
@@ -388,7 +412,7 @@ MementoSyncTests.prototype = function() {
                     );
                 });
 
-            });
+            }.bind(this));
         },
 
         EOF:null
