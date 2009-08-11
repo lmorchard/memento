@@ -1,17 +1,19 @@
 /**
  * Preferences scene assistant.
  *
+ * @class
  * @package    Memento
  * @subpackage assistants
  * @author     <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
  */
-var Mojo, Memento, $L;
-
+/*jslint laxbreak: true */
+/*global Memento, Note, Mojo, $L, $H, SimpleDateFormat */
 function PreferencesAssistant(note) {
 }
 
 PreferencesAssistant.prototype = (function () {
 
+    /** @lends PreferencesAssistant# */ 
     return {
 
         /**

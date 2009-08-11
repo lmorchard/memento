@@ -74,7 +74,7 @@ var SimpleDateFormat;
 		var d = new Date(year, month, day, 0, 0, 0);
 		d.setMilliseconds(0);
 		return d;
-	}
+	};
 
 	Date.prototype.getDifference = function(date) {
 		return this.getTime() - date.getTime();
@@ -99,7 +99,7 @@ var SimpleDateFormat;
 		var previousSunday = new Date(midday.getTime() - this.getDay() * ONE_DAY);
 		return newDateAtMidnight(previousSunday.getFullYear(), previousSunday.getMonth(),
 				previousSunday.getDate());
-	}
+	};
 
 	Date.prototype.getWeekInYear = function(minimalDaysInFirstWeek) {
 		if (isUndefined(this.minimalDaysInFirstWeek)) {

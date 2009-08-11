@@ -1,11 +1,7 @@
-/**
- * Memento.Service wrapper for web API
- *
- * @author l.m.orchard@pobox.com
- */
+/*jslint laxbreak: true */
 Memento.Service = function(options) {
     this.initialize(options);
-}
+};
 
 Memento.Service.prototype = function() {
 
@@ -13,10 +9,12 @@ Memento.Service.prototype = function() {
         service_url: 'http://dev.memento.decafbad.com/'
     };
 
-    /** @lends Memento.Service# */
-    return {
+    return /** @lends Memento.Service# */ {
 
         /**
+         * Memento.Service wrapper for web API
+         *
+         * @author l.m.orchard@pobox.com
          * @constructs
          */
         initialize: function(options) {
@@ -24,9 +22,15 @@ Memento.Service.prototype = function() {
             Object.extend(this.options, options || {});
         },
 
+        /**
+         * Delete all notes
+         *
+         * @param {function} on_success Success callback
+         * @param {function} on_failure Failure callback
+         */
         deleteAllNotes: function(on_success, on_failure) {
             var url = this.options.service_url;
-            new Ajax.JSONRequest(url, {
+            var req = new Ajax.JSONRequest(url, {
                 method: 'DELETE',
                 // Only a 410 status is actually considered a success.
                 on410:     on_success,
@@ -35,21 +39,35 @@ Memento.Service.prototype = function() {
             });
         },
 
+        /**
+         * Find a set of notes.
+         *
+         * @param {function} on_success Success callback
+         * @param {function} on_failure Failure callback
+         */
         findAllNotes: function(on_success, on_failure) {
             var url = this.options.service_url;
-            new Ajax.JSONRequest(url, {
+            var req = new Ajax.JSONRequest(url, {
                 method: 'GET',
                 onSuccess: on_success, onFailure: on_failure
             });
         },
 
+        /**
+         * Find a single note by UUID and etag
+         *
+         * @param {string} uuid Note UUID
+         * @param {string} etag Server content etag
+         * @param {function} on_success Success callback
+         * @param {function} on_failure Failure callback
+         */
         findNote: function(uuid, etag, on_success, on_failure) {
             var url = this.options.service_url + 'notes/' + uuid;
             var headers = {};
             if (etag) {
                 headers['If-None-Match'] = etag;
             }
-            new Ajax.JSONRequest(url, {
+            var req = new Ajax.JSONRequest(url, {
                 method: 'GET',
                 requestHeaders: headers,
                 onSuccess: function(data, resp) {
@@ -65,14 +83,36 @@ Memento.Service.prototype = function() {
             });
         },
 
+        /**
+         * Add a new note to the model.
+         *
+         * @param {object} data Note properties
+         * @param {string} [data.name] Note name
+         * @param {string} [data.text] Text content
+         * @param {string} [data.uuid] Unique identifier
+         * @param {string} [data.etag] Content etag from remote service
+         * @param {string} [data.created]  Creation date in ISO8601 format
+         * @param {string} [data.modified] Modification date in ISO8601 format
+         * @param {function} on_success Success callback
+         * @param {function} on_failure Failure callback
+         */
         addNote: function(data, on_success, on_failure) {
             var url = this.options.service_url;
-            new Ajax.JSONRequest(url, {
+            var req = new Ajax.JSONRequest(url, {
                 method: 'POST', postBody: data,
                 onSuccess: on_success, onFailure: on_failure
             });
         },
 
+        /**
+         * Delete a single note.
+         *
+         * @param {string} uuid Note UUID
+         * @param {string} etag Server content etag
+         * @param {boolean} force_delete Whether or not to force a delete.
+         * @param {function} on_success Success callback
+         * @param {function} on_failure Failure callback
+         */
         deleteNote: function(uuid, etag, force_delete, on_success, on_failure) {
             var url = this.options.service_url + 'notes/' + uuid;
             var headers = {};
@@ -80,7 +120,7 @@ Memento.Service.prototype = function() {
                 // Make sure to only delete what we think we're deleting.
                 headers['If-Match'] = etag;
             }
-            new Ajax.JSONRequest(url, {
+            var req = new Ajax.JSONRequest(url, {
                 method: 'DELETE',
                 requestHeaders: headers,
                 // Only a 410 status is actually considered a success.
@@ -90,6 +130,20 @@ Memento.Service.prototype = function() {
             });
         },
 
+        /**
+         * Add a new note to the model.
+         *
+         * @param {object} data Note properties
+         * @param {string} [data.name] Note name
+         * @param {string} [data.text] Text content
+         * @param {string} [data.uuid] Unique identifier
+         * @param {string} [data.etag] Content etag from remote service
+         * @param {string} [data.created]  Creation date in ISO8601 format
+         * @param {string} [data.modified] Modification date in ISO8601 format
+         * @param {boolean} force_overwrite Whether or not to force an overwrite
+         * @param {function} on_success Success callback
+         * @param {function} on_failure Failure callback
+         */
         saveNote: function(data, force_overwrite, on_success, on_failure) {
             var url = this.options.service_url + 'notes/' + data.uuid;
             var headers = {};
@@ -100,7 +154,7 @@ Memento.Service.prototype = function() {
                     headers['If-None-Match'] = '*';
                 }
             }
-            new Ajax.JSONRequest(url, {
+            var req = new Ajax.JSONRequest(url, {
                 method: 'PUT', postBody: data,
                 requestHeaders: headers,
                 onSuccess: function(note, resp) {

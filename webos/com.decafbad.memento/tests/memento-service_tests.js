@@ -1,10 +1,5 @@
-/**
- * Tests for MementoService
- *
- * @author l.m.orchard@pobox.com
- * @see MementoService
- */
-var Mojo, Memento, Chain, Class, Ajax;
+/*jslint laxbreak: true */
+/*global Mojo, Memento, Chain, Class, Ajax */
 function MementoServiceTests(tickleFunction) {
     this.initialize(tickleFunction);
 }
@@ -58,11 +53,15 @@ MementoServiceTests.prototype = (function () {
         }
     });
         
-    return {
+    return /** @lends MementoServiceTests */ {
         timeoutInterval: 5000,
 
         /**
          * Test setup, run before execution of each test.
+         *
+         * @constructs
+         * @author l.m.orchard@pobox.com
+         * @see Memento.Service
          */
         initialize: function (tickleFunction) {
             this.tickleFunction = tickleFunction;
@@ -353,7 +352,7 @@ MementoServiceTests.prototype = (function () {
                             "Etag from unmodified note should result in 304");
                         done();
                     }.bind(this),
-                    function (resp) { throw "findNote failure" }
+                    function (resp) { throw "findNote failure"; }
                 );
             });
 
@@ -367,7 +366,7 @@ MementoServiceTests.prototype = (function () {
                         new_etag = note.etag;
                         done();
                     },
-                    function (resp) { throw "saveNote failure" }
+                    function (resp) { throw "saveNote failure"; }
                 );
             });
 
@@ -377,13 +376,13 @@ MementoServiceTests.prototype = (function () {
                 this.memento_service.findNote(
                     original_note.uuid, original_etag,
                     function (note, resp) {
-                        Mojo.require(null != note,
+                        Mojo.require(null !== note,
                             "Note content should not be empty.");
                         Mojo.requireEqual(200, resp.status,
                             "Etag from modified note should result in 200");
                         done();
                     }.bind(this),
-                    function (resp) { throw "findNote failure" }
+                    function (resp) { throw "findNote failure"; }
                 );
             });
 
@@ -413,7 +412,7 @@ MementoServiceTests.prototype = (function () {
          */
         _deleteAllNotes: function (main_done) {
             this.memento_service.deleteAllNotes(
-                main_done, function () { throw "deleteAllNotes failure" }
+                main_done, function () { throw "deleteAllNotes failure"; }
             );
         },
 

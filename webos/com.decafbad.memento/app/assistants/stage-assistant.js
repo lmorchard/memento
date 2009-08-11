@@ -1,21 +1,26 @@
 /**
  * Main stage assistant
  *
+ * @class
  * @package    Memento
  * @subpackage assistants
  * @author     <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
  */
+/*jslint laxbreak: true */
+/*global Memento, Note, Mojo, $L, $H, SimpleDateFormat */
 function StageAssistant() {
 }
 
 StageAssistant.prototype = (function () {
         
+    /** @lends StageAssistant# */ 
     return {
 
         setup: function () {
             // Hijack TestAssistant.updateResults to generate more logging
             // spew in console.
             var orig_fn = Mojo.Test.TestAssistant.prototype.updateResults;
+            /** @ignore */
             Mojo.Test.TestAssistant.prototype.updateResults = function () {
                 Mojo.log("Reporting test results...");
                 orig_fn.apply(this);

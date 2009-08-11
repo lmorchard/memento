@@ -7,7 +7,9 @@ Date.prototype.setISO8601 = function (string) {
         "(T([0-9]{2}):([0-9]{2})(:([0-9]{2})(\.([0-9]+))?)?" +
         "(Z|(([-+])([0-9]{2}):([0-9]{2})))?)?)?)?";
     var d = (''+string).match(new RegExp(regexp));
-    if (!d || !d.length) return this;
+    if (!d || !d.length) {
+        return this;
+    }
 
     var offset = 0;
     var date = new Date(d[1], 0, 1);
@@ -28,7 +30,7 @@ Date.prototype.setISO8601 = function (string) {
     this.setTime(Number(time));
 
     return this;
-}
+};
 
 Date.prototype.toISO8601String = function (format, offset) {
     /* accepted values for the format [1-6]:
@@ -46,18 +48,19 @@ Date.prototype.toISO8601String = function (format, offset) {
        fraction of a second
        YYYY-MM-DDThh:mm:ss.sTZD (eg 1997-07-16T19:20:30.45+01:00)
     */
-    if (!format) { var format = 5; }
+    var date;
+    if (!format) { format = 5; }
     if (!offset) {
-        var offset = 'Z';
-        var date = this;
+        offset = 'Z';
+        date = this;
     } else {
         var d = offset.match(/([-+])([0-9]{2}):([0-9]{2})/);
         var offsetnum = (Number(d[2]) * 60) + Number(d[3]);
         offsetnum *= ((d[1] == '-') ? -1 : 1);
-        var date = new Date(Number(Number(this) + (offsetnum * 60000)));
+        date = new Date(Number(Number(this) + (offsetnum * 60000)));
     }
 
-    var zeropad = function (num) { return ((num < 10) ? '0' : '') + num; }
+    var zeropad = function (num) { return ((num < 10) ? '0' : '') + num; };
 
     var str = "";
     str += date.getUTCFullYear();
@@ -76,4 +79,4 @@ Date.prototype.toISO8601String = function (format, offset) {
 
     if (format > 3) { str += offset; }
     return str;
-}
+};

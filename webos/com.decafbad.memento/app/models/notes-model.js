@@ -1,18 +1,32 @@
-/**
- * Model for notes storage.
- *
- * @author l.m.orchard@pobox.com
- */
-Note = Class.create({
+/*jslint laxbreak: true */
+Note = Class.create(/** @lends Note# */{
     
+    /** List of known properties */
     property_names: ['uuid', 'etag', 'name', 'text', 'created', 'modified'],
 
+    /**
+     * Note item representation. 
+     *
+     * @author l.m.orchard@pobox.com
+     * @constructs
+     *
+     * @param {object} data Note properties
+     * @param {string} [data.name] Note name
+     * @param {string} [data.text] Text content
+     * @param {string} [data.uuid] Unique identifier
+     * @param {string} [data.etag] Content etag from remote service
+     * @param {string} [data.created]  Creation date in ISO8601 format
+     * @param {string} [data.modified] Modification date in ISO8601 format
+     */
     initialize: function(data) {
-        if (!data) data = {};
+        if (!data) {
+            data = {};
+        }
 
         this.property_names.each(function(name) {
-            if (typeof data[name] != 'undefined')
+            if (typeof data[name] != 'undefined') {
                 this[name] = data[name];
+            }
         }, this);
 
         if (!this.uuid) {
@@ -34,11 +48,23 @@ NotesModel = (function() {
     var NOTES_BUCKET  = 'notes';
     var NOTES_FILTERS = []; //'name', 'text', 'created', 'modified'];
 
-    return Class.create({
+    return Class.create(/** @lends NotesModel# */{
 
+        /** 
+         * Model for notes storage.
+         *
+         * @constructs 
+         * @author l.m.orchard@pobox.com
+         *
+         * @param {string} [depot_name="Memento_Data] Name of the depot
+         * @param {function} on_success Success callback
+         * @param {function} on_fail Failure callback
+         */
         initialize: function(depot_name, on_success, on_fail) {
 
-            if (!depot_name) depot_name = DEFAULT_DEPOT;
+            if (!depot_name) { 
+                depot_name = DEFAULT_DEPOT;
+            }
             this.depot_name = depot_name;
          
             this.depot = new Mojo.Depot({
@@ -49,15 +75,41 @@ NotesModel = (function() {
 
         },
 
+        /**
+         * Reset the model by deleting all contents.
+         *
+         * @param {function} on_success Success callback
+         * @param {function} on_failure Failure callback
+         */
         reset: function (on_success, on_fail) {
             this.depot.removeAll();
         },
         
+        /**
+         * Add a new note to the model.
+         *
+         * @param {object} data Note properties
+         * @param {string} [data.name] Note name
+         * @param {string} [data.text] Text content
+         * @param {string} [data.uuid] Unique identifier
+         * @param {string} [data.etag] Content etag from remote service
+         * @param {string} [data.created]  Creation date in ISO8601 format
+         * @param {string} [data.modified] Modification date in ISO8601 format
+         * @param {function} on_success Success callback
+         * @param {function} on_failure Failure callback
+         */
         add: function(data, on_success, on_fail) {
             var note = new Note(data);
             return this.save(note, on_success, on_fail);
         },
 
+        /**
+         * Save a single note.
+         *
+         * @param {Note} Note object
+         * @param {function} on_success Success callback
+         * @param {function} on_failure Failure callback
+         */
         save: function (note, on_success, on_fail) {
             if (!note.uuid) {
                 note.uuid = Math.uuid().toLowerCase();
@@ -78,6 +130,15 @@ NotesModel = (function() {
             return note;
         },
 
+        /**
+         * Find a set of notes.
+         *
+         * @param {string[]} filters
+         * @param {integer} limit Limit of result set items
+         * @param {offset} offset Offset into result set items
+         * @param {function} on_success Success callback
+         * @param {function} on_failure Failure callback
+         */
         findAll: function (filters, limit, offset, on_success, on_fail) {
             this.depot.getMultiple(
                 NOTES_BUCKET, filters, 
@@ -87,6 +148,13 @@ NotesModel = (function() {
             );
         },
 
+        /**
+         * Find a single note by UUID
+         *
+         * @param {string} UUID
+         * @param {function} on_success Success callback
+         * @param {function} on_failure Failure callback
+         */
         find: function (uuid, on_success, on_fail) {
             this.depot.getSingle(
                 NOTES_BUCKET, uuid, 
@@ -97,6 +165,13 @@ NotesModel = (function() {
             );
         },
 
+        /**
+         * Delete a single note.
+         *
+         * @param {Note} Note object
+         * @param {function} on_success Success callback
+         * @param {function} on_failure Failure callback
+         */
         del: function (note, on_success, on_fail) {
             this.depot.remove(
                 NOTES_BUCKET, note.uuid,

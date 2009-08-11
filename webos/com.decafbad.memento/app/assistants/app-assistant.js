@@ -1,6 +1,7 @@
 /**
  * App assistant.
  *
+ * @class
  * @package    Memento
  * @subpackage assistants
  * @author     <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
@@ -10,6 +11,7 @@ function AppAssistant(app_controller) {
 
 AppAssistant.prototype = (function() {
 
+    /** @lends AppAssistant# */ 
     return {
 
         setup: function() {

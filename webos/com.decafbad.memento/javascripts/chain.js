@@ -1,14 +1,17 @@
 /**
  * Chain of functions, useful in sequencing async calls.
  *
+ * @class
  * @author l.m.orchard@pobox.com
  */
-Chain = Class.create({
+/*jslint laxbreak: true */
+Chain = Class.create(/** @lends Chain */{
 
     /**
      * Constructor
      *
-     * @param {array} List of functions for chain
+     * @param {array} action List of functions for chain
+     * @param {object} object Object used as this scope in calls.
      */
     initialize: function(actions, object) {
         this.running = null;
@@ -16,16 +19,16 @@ Chain = Class.create({
         this.object  = object;
 
         if (actions) { 
-            for (var i=0, action; action=actions[i]; i++) {
+            actions.each(function(action) {
                 this.push(action);
-            }
+            }, this);
         }
     },
 
     /**
      * Push an action onto the list.
      *
-     * @param {string|function}
+     * @param {string|function} action
      */
     push: function(action) {
         this.actions.push(action);
@@ -36,7 +39,9 @@ Chain = Class.create({
      * Start running the chain, starting with the first function.
      */
     start: function()  {
-        if (null !== this.running) return;
+        if (null !== this.running) {
+            return;
+        }
         this.running = false;
         this.next();
         return this;
@@ -46,13 +51,19 @@ Chain = Class.create({
      * Run the next function in the chain.
      */
     next: function()  {
-        if (false !== this.running) return;
-        if (!this.actions.length) return false;
+        if (false !== this.running) {
+            return;
+        }
+        if (!this.actions.length) {
+            return false;
+        }
 
         var action = this.actions.shift();
 
         var done = function() {
-            if (false == this.running) this.next();
+            if (false === this.running) {
+                this.next();
+            }
         }.bind(this);
 
         if (typeof action == 'string') {
@@ -67,6 +78,6 @@ Chain = Class.create({
             }
         }
         return this;
-    },
+    }
 
 });

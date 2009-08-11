@@ -1,10 +1,14 @@
 /**
- * @author     <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
- * @namespace Memento global package.
+ * Memento global package.
+ *
+ * @namespace
+ * @author <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
  */
-var Mojo, NotesModel;
+/*jslint laxbreak: true */
+/*global Mojo, NotesModel */
 var Memento = (function () {
     
+    /** @lends Memento */
     return {
 
         default_prefs: {
@@ -25,6 +29,9 @@ var Memento = (function () {
             //{ label: "Help", command: 'AppHelp' }
         ],
 
+        /**
+         * Global app-wide initialization.
+         */
         init: function () {
 
             this.prefs_cookie = new Mojo.Model.Cookie('memento_preferences');
@@ -33,12 +40,15 @@ var Memento = (function () {
             }
             this.prefs = this.prefs_cookie.get();
 
-            this.notes_model = 
-                new NotesModel();
-            this.notes_service = 
-                new Memento.Service(this.prefs.sync_url);
-            this.notes_sync = 
-                new Memento.Sync(this.notes_model, this.notes_service);
+            this.notes_model = new NotesModel();
+            this.notes_service = new Memento.Service({
+                service_url: this.prefs.sync_url
+            });
+            this.notes_sync = new Memento.Sync(
+                this.notes_model, this.notes_service
+            );
+
+            Mojo.log("Sync using %s", this.prefs.sync_url);
             
             if ('true' === Mojo.Environment.frameworkConfiguration.testsEnabled) {
                 this.app_menu_items.push(

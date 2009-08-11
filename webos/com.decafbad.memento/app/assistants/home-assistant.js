@@ -1,15 +1,18 @@
 /**
  * Home scene assistant.
  *
- * @package    Memento
- * @subpackage assistants
+ * @class
  * @author     <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
  */
+/*jslint laxbreak: true */
+/*global Memento, Note, Mojo, $L, $H, SimpleDateFormat */
 function HomeAssistant() {
     Memento.home_assistant = this;
 }
+
 HomeAssistant.prototype = (function () {
 
+    /** @lends HomeAssistant# */ 
     return {
 
         /**
@@ -35,7 +38,7 @@ HomeAssistant.prototype = (function () {
                 formatters: {
                     modified: this.formatDate
                 }
-            }
+            };
             this.controller.setupWidget(
                 "notes-list", list_attrs, this.list_model
             );
@@ -56,7 +59,7 @@ HomeAssistant.prototype = (function () {
 
             // Set up the new note command button.
             var command_menu_model = {items: [
-                { label: $L('+ New ...'), icon: 'new-note', command:'NewNote' },
+                { label: $L('+ New ...'), icon: 'new-note', command:'NewNote' }
             ]};
             this.controller.setupWidget(
                 Mojo.Menu.commandMenu, {}, command_menu_model
@@ -79,8 +82,9 @@ HomeAssistant.prototype = (function () {
         formatDate: function(date, model) {
             var now = new Date(),
                 dt  = (new Date()).setISO8601(date);
-            if (dt.toDateString() === now.toDateString())
+            if (dt.toDateString() === now.toDateString()) {
                 return "Today, " + new SimpleDateFormat("h:mm a").format(dt);
+            }
             return new SimpleDateFormat("MMMM d, yyyy h:mm a").format(dt);
         },
 
@@ -174,15 +178,17 @@ HomeAssistant.prototype = (function () {
         available_sorts: $H({
             'bydate': {
                 label: 'By date',
+                /** @inner */
                 cmp: function(b,a) {
-                    var av = a['modified'], bv = b['modified'];
+                    var av = a.modified, bv = b.modified;
                     return (av<bv) ? -1 : ( (av>bv) ? 1 : 0 );
                 }
             },
             'byalpha': {
                 label: 'By alpha',
+                /** @inner */
                 cmp: function(a,b) {
-                    var av = a['name'], bv = b['name'];
+                    var av = a.name, bv = b.name;
                     return (av<bv) ? -1 : ( (av>bv) ? 1 : 0 );
                 }
             }
@@ -201,7 +207,7 @@ HomeAssistant.prototype = (function () {
                 onChoose: function (order) {
                     if (order) {
                         this.list_order = order;
-                        var sort = this.available_sorts.get(order)
+                        var sort = this.available_sorts.get(order);
                         this.controller.get('sort-selector')
                             .update(sort.label);
                         this.refreshList();
@@ -247,7 +253,7 @@ HomeAssistant.prototype = (function () {
                     }
                 }.bind(this),
                 function() { 
-                    Mojo.Log.error('NotesModel findAll() failure') 
+                    Mojo.Log.error('NotesModel findAll() failure');
                 }.bind(this)
             );
         },
@@ -256,9 +262,15 @@ HomeAssistant.prototype = (function () {
          * Refresh the visible list given notes, offset, and count.
          */
         refreshList: function(notes, offset, count) {
-            if (!notes) notes = this.list_model.items;
-            if (!offset) offset = 0;
-            if (!count) count = notes.length;
+            if (!notes) { 
+                notes = this.list_model.items;
+            }
+            if (!offset) {
+                offset = 0;
+            }
+            if (!count) {
+                count = notes.length;
+            }
 
             // TODO: Implement this in the DB eventually?
             var sort_func = this.available_sorts.get(this.list_order).cmp;
@@ -272,7 +284,9 @@ HomeAssistant.prototype = (function () {
          * Menu command dispatcher.
          */
         handleCommand: function(event) {
-            if(event.type !== Mojo.Event.command) return;
+            if(event.type !== Mojo.Event.command) {
+                return;
+            }
             var func = this['handleCommand'+event.command];
             if (typeof func != 'undefined') {
                 return func.apply(this, [event]);

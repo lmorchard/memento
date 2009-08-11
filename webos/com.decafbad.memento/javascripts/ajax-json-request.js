@@ -2,9 +2,11 @@
  * Ajax.Request subclass making a few tweaks useful for requests to a
  * JSON-based REST API.
  *
+ * @class
  * @author l.m.orchard@pobox.com
  */
-Ajax.JSONRequest = Class.create(Ajax.Request, {
+/*jslint laxbreak: true */
+Ajax.JSONRequest = Class.create(Ajax.Request, /** @lends Ajax.JSONRequest */ {
 
     /**
      * Initialize with automatic JSON conversion for options.postBody.
@@ -65,12 +67,15 @@ Ajax.JSONRequest = Class.create(Ajax.Request, {
         if (typeof this.options.requestHeaders == 'object') {
             var extras = this.options.requestHeaders;
             $H(extras).each(function(pair) { 
-                headers[pair.key] = pair.value 
+                headers[pair.key] = pair.value;
             });
         }
 
-        for (var name in headers)
-            this.transport.setRequestHeader(name, headers[name]);
+        for (var name in headers) {
+            if (headers.hasOwnProperty(name)) {
+                this.transport.setRequestHeader(name, headers[name]);
+            }
+        }
 
     }
 

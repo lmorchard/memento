@@ -1,9 +1,4 @@
-/**
- * Tests for NotesModel
- *
- * @author l.m.orchard@pobox.com
- * @see NotesModel
- */
+/*jslint laxbreak: true */
 function NotesModelTests(tickleFunction) {
     this.initialize(tickleFunction);
 }
@@ -44,10 +39,14 @@ NotesModelTests.prototype = function() {
         }
     ];
         
-    return {
+    return /** @lends NotesModelTests */ {
 
         /**
          * Test setup, run before execution of each test.
+         *
+         * @constructs
+         * @author l.m.orchard@pobox.com
+         * @see NotesModel
          */
         initialize: function (tickleFunction) {
             this.tickleFunction = tickleFunction;
@@ -63,7 +62,7 @@ NotesModelTests.prototype = function() {
          * Exercise basic add/delete.
          */
         testAddDelete: function(recordResults) {
-            new Chain([
+            var chain = new Chain([
                 '_ensureEmpty',
                 '_addNotes',
                 '_deleteNotes',
@@ -76,7 +75,7 @@ NotesModelTests.prototype = function() {
          * Exercise basic add/delete.
          */
         testCreateAndAdd: function(recordResults) {
-            new Chain([
+            var chain = new Chain([
                 '_ensureEmpty',
                 '_createAndAddNotes',
                 '_deleteNotes',
@@ -89,7 +88,7 @@ NotesModelTests.prototype = function() {
          * Exercise finding single notes by ID.
          */
         testFind: function(recordResults) {
-            new Chain([
+            var chain = new Chain([
                 '_addNotes',
                 '_checkSavedNotes',
                 function() { recordResults(Mojo.Test.passed); }
@@ -100,7 +99,7 @@ NotesModelTests.prototype = function() {
          * Exercise finding multiple notes by filter.
          */
         testFindAll: function(recordResults) {
-            new Chain([
+            var chain = new Chain([
                 '_addNotes',
                 '_checkMultipleSavedNotes',
                 function() { recordResults(Mojo.Test.passed); }
@@ -111,7 +110,7 @@ NotesModelTests.prototype = function() {
          * Exercise Modification date updates on save.
          */
         testModificationDates: function (recordResults) {
-            new Chain([
+            var chain = new Chain([
                 '_addNotes',
                 '_checkModificationDates',
                 function() { recordResults(Mojo.Test.passed); }
@@ -126,7 +125,7 @@ NotesModelTests.prototype = function() {
                 null, null, null,
                 function(notes) {
                     Mojo.require(
-                        0 == notes.length, 
+                        0 === notes.length, 
                         "Notes should be empty at first"
                     );
                     main_done();
@@ -169,7 +168,7 @@ NotesModelTests.prototype = function() {
                         function() { throw "Note add failed"; }
                     );
 
-                }.bind(this))
+                }.bind(this));
             }, this);
 
             chain.push(main_done);
@@ -212,7 +211,7 @@ NotesModelTests.prototype = function() {
                         function() { throw "Note save failed"; }
                     );
 
-                }.bind(this))
+                }.bind(this));
             }, this);
 
             chain.push(main_done);
@@ -237,9 +236,9 @@ NotesModelTests.prototype = function() {
                                 result_note[name], expected_note[name],
                                 'Note ' + name + ' should match'
                             );
-                        }.bind(this)),
+                        }.bind(this));
                         done();
-                    }.bind(this)
+                    }.bind(this);
 
                     this.tickleFunction();
                     this.notes_model.find(
@@ -248,7 +247,7 @@ NotesModelTests.prototype = function() {
                         function() { throw "Note find failed"; }
                     );
 
-                }.bind(this))
+                }.bind(this));
             }, this);
 
             chain.push(main_done);
@@ -321,7 +320,7 @@ NotesModelTests.prototype = function() {
                             done();
                         }.bind(this),
                         function() { throw "Note save failed"; }
-                    )
+                    );
                 }.bind(this));
 
                 chain.push(function(done) {

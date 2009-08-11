@@ -1,8 +1,5 @@
-/**
- * Memento model/service sync machine
- * @author <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
- */
-var Mojo, Memento, Class, NotesModel, Chain, $H;
+/*jslint laxbreak: true */
+/*global Mojo, Memento, Class, NotesModel, Chain, $H */
 Memento.Sync = Class.create(function () {
 
     var default_sync_notes = {
@@ -14,7 +11,9 @@ Memento.Sync = Class.create(function () {
     return {
 
         /**
-         * Constructor.
+         * Memento model/service sync machine
+         *
+         * @author <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
          * @constructs
          */
         initialize: function (model, service, sync_notes) {

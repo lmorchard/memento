@@ -53,12 +53,14 @@ Math.uuid = (function() {
   var CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split(''); 
 
   return function (len, radix) {
-    var chars = CHARS, uuid = [], rnd = Math.random;
+    var i, chars = CHARS, uuid = [], rnd = Math.random;
     radix = radix || chars.length;
 
     if (len) {
       // Compact form
-      for (var i = 0; i < len; i++) uuid[i] = chars[0 | rnd()*radix];
+      for (i = 0; i < len; i++) {
+        uuid[i] = chars[0 | rnd()*radix];
+      }
     } else {
       // rfc4122, version 4 form
       var r;
@@ -69,7 +71,7 @@ Math.uuid = (function() {
 
       // Fill in random data.  At i==19 set the high bits of clock sequence as
       // per rfc4122, sec. 4.1.5
-      for (var i = 0; i < 36; i++) {
+      for (i = 0; i < 36; i++) {
         if (!uuid[i]) {
           r = 0 | rnd()*16;
           uuid[i] = chars[(i == 19) ? (r & 0x3) | 0x8 : r & 0xf];

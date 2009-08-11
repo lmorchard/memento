@@ -1,9 +1,3 @@
-/**
- * Tests for MementoSync
- *
- * @author l.m.orchard@pobox.com
- * @see Memento.Sync
- */
 function MementoSyncTests(tickleFunction) {
     this.initialize(tickleFunction);
 }
@@ -119,9 +113,9 @@ MementoSyncTests.prototype = function() {
     ];
 
     var uuid_cmp = function(a,b) {
-        var av = a['uuid'], bv = b['uuid'];
+        var av = a.uuid, bv = b.uuid;
         return (av<bv) ? -1 : ( (av>bv) ? 1 : 0 );
-    }
+    };
 
     // Common mock storage class.
     var Mock_Store = Class.create({
@@ -137,7 +131,7 @@ MementoSyncTests.prototype = function() {
                     uuid:     item.uuid,
                     created:  item.created,
                     modified: item.modified
-                }
+                };
             });
             on_success(out);
         },
@@ -150,7 +144,7 @@ MementoSyncTests.prototype = function() {
         save: function (data, on_success, on_fail) {
             var new_data = this.test_data.filter(function(item) {
                 return item.uuid != data.uuid;
-            })
+            });
             new_data.push(data);
             this.test_data = new_data;
             on_success(data);
@@ -190,12 +184,16 @@ MementoSyncTests.prototype = function() {
     });
         
     // The test class begins...
-    return {
+    return /** @lends MementoSyncTests */ {
 
         timeoutInterval: 5000,
 
         /**
          * Test setup, run before execution of each test.
+         *
+         * @constructs
+         * @author l.m.orchard@pobox.com
+         * @see Memento.Sync
          */
         initialize: function (tickleFunction) {
             this.tickleFunction = tickleFunction;
@@ -205,7 +203,7 @@ MementoSyncTests.prototype = function() {
          * Exercise the full sync process.
          */
         testFullSync: function(recordResults) {
-            new Chain([
+            var chain = new Chain([
                 '_setupModel',
                 //'_createMockModel',
                 '_setupService',
@@ -230,7 +228,7 @@ MementoSyncTests.prototype = function() {
                         item, sub_done,
                         function() { throw "model save failed!"; }
                     );
-                })
+                });
             }.bind(this));
             
             chain.push(done).start();
@@ -255,7 +253,7 @@ MementoSyncTests.prototype = function() {
                         item, true, sub_done,
                         function() { throw "service save failed!"; }
                     );
-                })
+                });
             }.bind(this));
 
             chain.push(done).start();
@@ -371,7 +369,7 @@ MementoSyncTests.prototype = function() {
                             );
                         });
 
-                    }, this) 
+                    }, this);
                     
                     // Once all the fetches have completed, verify the 
                     // accumlated data against expectations.

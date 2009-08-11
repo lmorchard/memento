@@ -1,16 +1,18 @@
 /**
  * Single note scene assistant.
  *
- * @package    Memento
- * @subpackage assistants
+ * @class
  * @author     <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
  */
+/*jslint laxbreak: true */
+/*global Memento, Note, Mojo, $L, $H, SimpleDateFormat */
 function NoteAssistant (note) {
     this.note = note;
 }
 
 NoteAssistant.prototype = (function () {
 
+    /** @lends NoteAssistant# */ 
     return {
 
         setup: function () {
@@ -79,7 +81,7 @@ NoteAssistant.prototype = (function () {
                 Memento.notes_service.saveNote(
                     this.note, force_overwrite, 
                     function(note, resp) { 
-                        Mojo.log("Remote save of note %s", this.note.uuid) 
+                        Mojo.log("Remote save of note %s", this.note.uuid);
                         this.note.etag = note.etag;
                         Memento.notes_model.save(
                             this.note, function(note) { }
@@ -108,7 +110,7 @@ NoteAssistant.prototype = (function () {
                         {value:"overwrite_remote", 
                             label:$L("Overwrite note on web") },
                         {value:"new_local", 
-                            label:$L("Save a new copy")},
+                            label:$L("Save a new copy")}
                     ],
                     onChoose: function(value) {
                         if ('overwrite_remote' == value) {

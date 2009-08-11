@@ -17,6 +17,14 @@ all: update-emu
 
 docs: FORCE
 	jsdoc -c=docs/jsdoc-toolkit.conf
+
+lint: FORCE
+	for fn in `find $(APPID) -type f -name '*js'`; do \
+		echo '----------------------------------------'; \
+		echo $$fn; \
+		cat $$fn | jslint; \
+	done;
+
 FORCE:
 
 package:
@@ -56,7 +64,7 @@ update-device: package kill-app-device install-app-device launch-app-device
 kill-app-device:
 	-palm-launch -d usb -c $(APPID)
 
-remove-device-app: kill-device
+remove-device-app: kill-app-device
 	-palm-install -d usb -r $(APPID)
 
 restart-device:
@@ -68,5 +76,5 @@ eboot-device:
 install-app-device: package
 	palm-install -d usb $(IPK)
 
-launch-app-device: install-device
+launch-app-device: install-app-device
 	palm-launch -d usb -i $(APPID)
