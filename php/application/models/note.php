@@ -8,6 +8,16 @@
  */
 class Note_Model extends ORM
 {
+    // {{{ Model properties
+
+    public $belongs_to = array('profile');    
+
+    protected $sorting = array(
+        'modified' => 'desc',
+        'created'  => 'desc'
+    );
+
+    // }}}
 
     /**
      * Find notes in a time range, ideally in ISO8601 format.
@@ -16,8 +26,9 @@ class Note_Model extends ORM
      * @param string Time until
      * @return ORM_Iterator
      */
-    public function find_modified_in_timerange($since=null, $until=null)
+    public function find_modified_in_timerange($profile_id, $since=null, $until=null)
     {
+        $this->where('profile_id', $profile_id);
         $since = strtotime($since);
         if ($since) $this->where('modified >=', gmdate('c', $since));
         $until = strtotime($until);

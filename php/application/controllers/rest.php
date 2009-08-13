@@ -41,14 +41,24 @@ class Rest_Controller extends Controller
      */
     public function __construct()
     {
-        parent::__construct();
-
-        Event::add('system.403', array($this, 'show_403'));
-        Event::add('system.post_controller', array($this, 'renderView'));
-
         $this->layout = View::factory();
         $this->view   = View::factory();
 
+        parent::__construct();
+
+        Event::add('system.post_controller_constructor', 
+            array($this, 'fixupMethod'));
+        Event::add('system.post_controller', 
+            array($this, 'renderView'));
+        Event::add('system.403', 
+            array($this, 'show_403'));
+    }
+
+    /**
+     * Fixup request method based on overrides, then tweak routed controller 
+     * method based on request method.
+     */
+    public function fixupMethod() {
         $this->fixupRequestMethod();
         $this->fixupControllerMethod();
     }
@@ -256,6 +266,9 @@ class Rest_Controller extends Controller
             if (Kohana::find_file('views', $proposed)) {
                 return $proposed;
             }
+        }
+        if (Kohana::find_file('views', $prefix)) {
+            return $prefix;
         }
 
         // If all else fails, respond with an error.

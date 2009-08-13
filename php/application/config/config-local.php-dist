@@ -19,3 +19,13 @@ $config['database.default'] = array
 	'cache'         => FALSE,
 	'escape'        => TRUE
 );
+
+$config['email.driver'] = 'smtp';
+
+$config['email.options'] = array(
+    'hostname'   => 'smtp.gmail.com',
+    'username'   => 'USERNAME',
+    'password'   => 'PASSWORD',
+    'port'       => '465',
+    'encryption' => 'tls'   
+);

@@ -22,11 +22,49 @@ class Notes_Controller_Test extends PHPUnit_Framework_TestCase
     {
         LMO_Utils_EnvConfig::apply('tests');
 
-        $this->base_url = Kohana::config('tests.base_url');
+        ORM::factory('note')->delete_all();
+        ORM::factory('note_tombstone')->delete_all();
+        ORM::factory('profile')->delete_all();
+        ORM::factory('login')->delete_all();
 
-        // Make sure all notes and tombstones are gone.
-        $this->request('/', 'DELETE');
-        $this->request('/?tombstones', 'DELETE');
+        $this->login_1 = ORM::factory('login')->set(array(
+            'login_name' => 'tester1',
+            'email'      => 'tester1@example.com',
+        ))->save();
+        $this->login_1->change_password('tester1_password');
+
+        $this->username = 'tester1';
+        $this->password = 'tester1_password';
+
+        $this->profile_1 = ORM::factory('profile')->set(array(
+            'screen_name' => 'tester1',
+            'full_name'   => 'Tess T. Err',
+            'org_name'    => 'Test Organization',
+        ))->save();
+
+        $this->profile_1->add($this->login_1);
+        $this->profile_1->save();
+
+        $this->login_2 = ORM::factory('login')->set(array(
+            'login_name' => 'tester2',
+            'email'      => 'tester2@example.com',
+        ))->save();
+        $this->login_2->change_password('tester2_password');
+
+        $this->username_2 = 'tester2';
+        $this->password_2 = 'tester2_password';
+
+        $this->profile_2 = ORM::factory('profile')->set(array(
+            'screen_name' => 'tester2',
+            'full_name'   => 'Tess T. Err',
+            'org_name'    => 'Test Organization',
+        ))->save();
+
+        $this->profile_2->add($this->login_2);
+        $this->profile_2->save();
+
+        $this->base_url = Kohana::config('tests.base_url') .
+            '/profiles/' . $this->profile_1->screen_name;
 
         $this->test_data = array(
             array(
@@ -47,6 +85,102 @@ class Notes_Controller_Test extends PHPUnit_Framework_TestCase
             ),
         );
 
+    }
+
+    /**
+     * Simple exercise of Basic Auth.
+     */
+    public function testBasicAuth()
+    {
+        // Try an unauthenticated GET, which should be disallowed.
+        $resp = $this->request('/', 'GET', null, null, FALSE, FALSE);
+        $this->assertEquals(401, $resp['status'],
+            'Status should be 401 Unauthorized');
+
+        // Try an authenticated GET, which should be allowed.
+        $resp = $this->request('/', 'GET', null, null);
+        $this->assertEquals(200, $resp['status'], 
+            'Status should be 200 OK');
+    }
+
+    /**
+     *
+     */
+    public function testPermissions()
+    {
+        $data = $this->test_data[0];
+
+        $resp = $this->request('/', 'POST', $data);
+        $this->assertEquals($resp['status'], 201, 
+            'Status should be 201 Created');
+        $this->assertTrue(
+            isset($resp['headers']['location']),
+            'Response should supply a Location: header'
+        );
+
+        $note_url = $resp['headers']['location'];
+        $resp = $this->request($note_url);
+        $note = $resp['body'];
+        $this->assertTrue(!empty($note['uuid']), 
+            'There must be a UUID set');
+        $this->assertTrue(!isset($seen_uuids[$note['uuid']]),
+            'The UUID must be unique.');
+
+        $resp = $this->request($note_url, 'GET', null, null, 
+            $this->username_2, $this->password_2);
+        $this->assertEquals(403, $resp['status'],
+            'Status should be 403 Unauthorized');
+
+        $resp = $this->request($note_url, 'DELETE', null, null, 
+            $this->username_2, $this->password_2);
+        $this->assertEquals(403, $resp['status'],
+            'Status should be 403 Unauthorized');
+
+        $resp = $this->request($note_url, 'PUT', $data, null, 
+            $this->username_2, $this->password_2);
+        $this->assertEquals(403, $resp['status'],
+            'Status should be 403 Unauthorized');
+
+        $this->orig_base_url = $this->base_url;
+
+        $this->base_url = Kohana::config('tests.base_url') .
+            '/profiles/' . $this->profile_2->screen_name;
+
+        $resp = $this->request('/', 'POST', $data, null, 
+            $this->username_2, $this->password_2);
+        $this->assertEquals($resp['status'], 201, 
+            'Status should be 201 Created');
+        $this->assertTrue(
+            isset($resp['headers']['location']),
+            'Response should supply a Location: header'
+        );
+
+        $note_url = $resp['headers']['location'];
+        $resp = $this->request($note_url, 'GET', null, null, 
+            $this->username_2, $this->password_2);
+        $note = $resp['body'];
+        $this->assertTrue(!empty($note['uuid']), 
+            'There must be a UUID set');
+        $this->assertTrue(!isset($seen_uuids[$note['uuid']]),
+            'The UUID must be unique.');
+
+        $resp = $this->request($note_url, 'GET', null, null, 
+            $this->username, $this->password);
+        $this->assertEquals(403, $resp['status'],
+            'Status should be 403 Unauthorized');
+
+        $resp = $this->request($note_url, 'DELETE', null, null, 
+            $this->username, $this->password);
+        $this->assertEquals(403, $resp['status'],
+            'Status should be 403 Unauthorized');
+
+        $resp = $this->request($note_url, 'PUT', $data, null, 
+            $this->username, $this->password);
+        $this->assertEquals(403, $resp['status'],
+            'Status should be 403 Unauthorized');
+
+
+        $this->base_url = $this->orig_base_url;
     }
 
     /**
@@ -345,8 +479,12 @@ class Notes_Controller_Test extends PHPUnit_Framework_TestCase
      * @param string|array Request body, sent as JSON if not string
      * @param array        HTTP headers
      */
-    protected function request($path, $method='GET', $body=null, $headers=null)
+    public function request($path, $method='GET', $body=null, $headers=null, 
+        $username=null, $password=null)
     {
+        if (null===$username) $username = $this->username;
+        if (null===$password) $password = $this->password;
+
         if (substr($path, 0, 1) == '/') {
             $url = $this->base_url.$path;
         } else {
@@ -369,7 +507,12 @@ class Notes_Controller_Test extends PHPUnit_Framework_TestCase
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HEADER         => true,
             CURLOPT_CUSTOMREQUEST  => $method,
+            CURLOPT_USERAGENT      => 'MementoTest/1.0',
         );
+
+        if (!empty($username) && !empty($password)) {
+            $opts[CURLOPT_USERPWD] = "{$username}:{$password}";
+        }
 
         $nobody_methods = array('GET', 'DELETE', 'HEAD');
         if (null !== $body && !in_array($method, $nobody_methods)) {
@@ -421,6 +564,7 @@ class Notes_Controller_Test extends PHPUnit_Framework_TestCase
         if(substr($lines[0],0,5) == 'HTTP/') {
             $response = array_shift($lines);
         }
+        $headers = array();
         foreach($lines as $line) {
             $matches = array();
             preg_match("/^(.+?):\s+(.+)$/",trim($line),$matches);

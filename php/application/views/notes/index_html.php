@@ -1,9 +1,19 @@
-<?php slot::set('page_title', 'all notes') ?>
+<?php
+$u_screen_name = html::specialchars($screen_name);
+slot::set('page_title', 'Notes for ' . $u_screen_name);
+?>
+<?php slot::start('crumbs') ?>Notes for <?=$u_screen_name?><?php slot::end() ?>
 
-<form method="POST" action="<?=url::base() . 'notes/?format=html'?>">
-    <label>name</label>
-    <input type="text" size="30" name="name" id="name" />
-    <input type="submit" value="new" />
+<?php
+$form_url = url::base() . 'profiles/'.$screen_name.'/notes/?format=html'
+?>
+<form method="POST" action="<?=$form_url?>">
+    <fieldset class="new_note">
+        <legend>new note</legend>
+        <label for="name">name</label>
+        <input type="text" size="60" name="name" id="name" />
+        <input type="submit" class="submit" value="new" />
+    </fieldset>
 </form>
 
 <ul>
@@ -12,12 +22,14 @@
             $note_data = $note->as_array();
             $h = html::escape_array($note_data);
             $u = html::urlencode_array($note_data);
+            $note_url = url::base() . 'profiles/' . $screen_name . 
+                '/notes/' . $u['uuid'];
         ?>
         <li>
-            <a href="<?=url::base() . 'notes/' . $u['uuid'] ?>;edit"><?=$h['name']?></a>
+            <a href="<?=$note_url?>;edit"><?=$h['name']?></a>
             <?=gmdate('c', strtotime($h['modified'].'Z'))?>
-            [<a href="<?=url::base() . 'notes/' . $u['uuid'] ?>;delete">delete</a>]
-            [<a href="<?=url::base() . 'notes/' . $u['uuid'] ?>">raw</a>]
+            [<a href="<?=$note_url?>;delete">delete</a>]
+            [<a href="<?=$note_url?>">raw</a>]
         </li>
     <?php endforeach ?>
 </ul>

@@ -1,12 +1,12 @@
 <?php
 /**
- * Main controller for the application
+ * Notes controller for the application
  * 
  * @package    Memento
  * @subpackage controllers
  * @author     l.m.orchard <l.m.orchard@pobox.com>
  */
-class Notes_Controller extends Rest_Controller
+class Notes_Controller extends Local_Controller
 {
     // {{{ Object properties
     
@@ -19,24 +19,61 @@ class Notes_Controller extends Rest_Controller
      */
     public function __construct()
     {
+        parent::__construct();
+        
         $this->note_model = new Note_Model();
 
-        parent::__construct();
+        $unauth_methods = array(/*'index', 'view', 'download', 'firstrun'*/);
+
+        if (!authprofiles::is_logged_in()) {
+            if (!in_array(Router::$method, $unauth_methods)) {
+                Session::instance()->set_flash(
+                    'message', 'Login required to manipulate repacks.'
+                );
+                return authprofiles::redirect_login();
+            }
+        }
     }
 
+    public function _commonSetup()
+    {
+        $this->route_params = $this->getRouteParams(array(
+            'screen_name' => null,
+            'uuid' => null,
+        ));
+
+        $this->profile = $this->view->profile = 
+            ORM::factory('profile', $this->route_params['screen_name']);
+
+        $this->own = ($this->profile->id == authprofiles::get_profile('id'));
+
+        $this->view->set_global(array(
+            'screen_name' => $this->route_params['screen_name'],
+            'profile' => $this->profile
+        ));
+
+        return $this->route_params;
+    }
 
     /**
      * Index resource setup for all HTTP methods
      */
     public function index()
     {
+        extract($this->_commonSetup());
+
+        if (!authprofiles::is_allowed('notes', 'view') &&
+            !( $this->own && authprofiles::is_allowed('notes', 'view_own'))) {
+            return Event::run('system.403');
+        }
+
         if ('post' == request::method()) return;
 
         $since = $this->input->get('since', null);
         $until = $this->input->get('until', null);
-        
+
         $this->notes = $this->note_model
-            ->find_modified_in_timerange($since, $until);
+            ->find_modified_in_timerange($this->profile->id, $since, $until);
 
         $tombstones = $this->input->get('tombstones', null);
         if (null !== $tombstones) {
@@ -60,6 +97,11 @@ class Notes_Controller extends Rest_Controller
      */
     public function index_DELETE()
     {
+        if (!authprofiles::is_allowed('notes', 'delete') &&
+            !( $this->own && authprofiles::is_allowed('notes', 'delete_own'))) {
+            return Event::run('system.403');
+        }
+
         // Delete all notes (if enabled, for testing) on DELETE to index.
         if (Kohana::config('notes.enable_delete_all') !== true) {
             Event::run('system.403');
@@ -82,27 +124,35 @@ class Notes_Controller extends Rest_Controller
      */
     public function index_POST()
     {
+        if (!authprofiles::is_allowed('notes', 'create') &&
+            !( $this->own && authprofiles::is_allowed('notes', 'create_own'))) {
+            return Event::run('system.403');
+        }
+
         // Create a new note from POST to index
         $params = $this->getRequestParameters();
 
         $note = new Note_Model();
+        $note->profile_id = $this->profile->id;
         $note->uuid = isset($params['uuid']) ? 
-            $params['uuid'] : null;
+            $params['uuid'] : uuid::uuid();
         $note->name = isset($params['name']) ? 
             $params['name'] : 'Untitled';
         $note->text = isset($params['text']) ? 
             $params['text'] : 'Your notes go here.';
         $note->save();
 
+        $href = url::base() . 'profiles/' .  $this->profile->screen_name .
+            '/notes/' . $note->uuid;
+
         switch ($this->preferredAccept()) {
             case 'text/html': 
-                return url::redirect('notes/' . $note->uuid . ';edit');
+                return url::redirect($href . ';edit');
             case 'application/json':
                 
                 header("HTTP/1.1 201 Created");
                 header('Content-Type: application/json');
                 
-                $href = url::base() . 'notes/' . $note->uuid;
                 header("Location: {$href}");
 
                 $this->view->note = $note;
@@ -111,7 +161,8 @@ class Notes_Controller extends Rest_Controller
                 return;
             default:
                 header("HTTP/1.1 201 Created");
-                $href = url::base() . 'notes/' . $note->uuid;
+                $href = url::base() . 'profiles/' . $this->profile->screen_name . 
+                    '/notes/' . $note->uuid;
                 header("Location: {$href}");
                 exit;
         }
@@ -121,7 +172,13 @@ class Notes_Controller extends Rest_Controller
     /**
      * View resource setup for all HTTP methods
      */
-    public function view($uuid) {
+    public function view() {
+        extract($this->_commonSetup());
+
+        if (!authprofiles::is_allowed('notes', 'view') &&
+            !( $this->own && authprofiles::is_allowed('notes', 'view_own'))) {
+            return Event::run('system.403');
+        }
 
         if (ctype_digit($uuid)) {
             // Disallow pure numeric UUIDs
@@ -133,15 +190,16 @@ class Notes_Controller extends Rest_Controller
         if ('put' === request::method()) {
             if (!$this->note->loaded) {
                 // Require an If-[None-]Match header on blind save.
-                /*
                 if (!$this->input->server('HTTP_IF_MATCH', null) &&
                         !$this->input->server('HTTP_IF_NONE_MATCH', null)) {
                     return Event::run('system.403');
                 }
+                /*
                 */
 
                 // PUT request is allowed to blindly save an unknown note.
                 $this->note = ORM::factory('note');
+                $this->note->profile_id = $this->profile->id;
                 $this->note->uuid = strtolower($uuid);
             }
         } else {
@@ -182,6 +240,11 @@ class Notes_Controller extends Rest_Controller
      */
     public function view_DELETE($uuid)
     {
+        if (!authprofiles::is_allowed('notes', 'delete') &&
+            !( $this->own && authprofiles::is_allowed('notes', 'delete_own'))) {
+            return Event::run('system.403');
+        }
+
         $this->note->delete(); 
         switch ($this->preferredAccept()) {
             case 'text/html': 
@@ -198,6 +261,11 @@ class Notes_Controller extends Rest_Controller
      */
     public function view_PUT($uuid)
     {
+        if (!authprofiles::is_allowed('notes', 'edit') &&
+            !( $this->own && authprofiles::is_allowed('notes', 'edit_own'))) {
+            return Event::run('system.403');
+        }
+
         $params = $this->getRequestParameters();
 
         if (isset($params['name'])) {
@@ -223,7 +291,8 @@ class Notes_Controller extends Rest_Controller
         switch ($this->preferredAccept()) {
             case 'text/html': 
                 header('HTTP/1.1 200 OK');
-                return url::redirect('notes/' . $this->note->uuid . ';edit');
+                return url::redirect('profiles/'.$this->profile->screen_name.
+                    '/notes/'.$this->note->uuid.';edit');
             case 'application/json':
                 header("HTTP/1.1 200 OK");
                 header('Content-Type: application/json');
@@ -240,16 +309,28 @@ class Notes_Controller extends Rest_Controller
     /**
      * Display an edit form for a note.
      */
-    public function editform($uuid)
+    public function editform()
     {
+        extract($this->_commonSetup());
+        if (!authprofiles::is_allowed('notes', 'edit') &&
+            !( $this->own && authprofiles::is_allowed('notes', 'edit_own'))) {
+            return Event::run('system.403');
+        }
+
         $this->view->note = $this->note_model->find($uuid);
     }
 
     /**
      * Display a delete form for a note.
      */
-    public function deleteform($uuid)
+    public function deleteform()
     {
+        extract($this->_commonSetup());
+        if (!authprofiles::is_allowed('notes', 'delete') &&
+            !( $this->own && authprofiles::is_allowed('notes', 'delete_own'))) {
+            return Event::run('system.403');
+        }
+
         $this->view->note = $this->note_model->find($uuid);
     }
 }

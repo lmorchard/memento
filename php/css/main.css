@@ -1,3 +1,131 @@
+body {
+    font-family: "Lucida Sans Unicode", "Lucida Grande", Verdana, Arial, Helvetica, sans-serif;
+    font-size: 100%;
+    margin: 1em; padding: 2em 0 0 0;
+}
+
+strong, em, b, i {
+    font-family: "Lucida Sans", "Lucida Sans Unicode", "Lucida Grande", Verdana, Arial, Helvetica, sans-serif;
+}
+
+.auth {
+    position: absolute;
+    top: 1em; right: 1em;
+}
+.auth ul.nav {
+    margin: 0; padding: 0;
+}
+.auth ul.nav li {
+    display: inline;
+    list-style: none;
+    padding-left: 1em;
+    font-size: 90%;
+}
+
+#pageheader {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    background-color: #ddd;
+    height: 3em;
+}
+#pageheader h1 {
+    margin: 0; 
+    padding: 0.75em 0 0 1em;
+    font-size: 115%;
+}
+#pageheader h2 {
+    position: absolute;
+    left: 8em;
+    top: 1em;
+    margin: 0; 
+    padding: 0 0 0 0;
+    font-size: 100%;
+}
+
+#pagebody form fieldset {
+    padding: 0.75em 1em; 
+    margin: 0.25em;
+    border: 1px solid #aaa;
+}
+#pagebody form fieldset fieldset {
+    padding: 0.25em; 
+    margin: 0.25em;
+}
+#pagebody form fieldset legend {
+    font-size: 0.75em;
+    color: #666;
+}
+#pagebody form fieldset .intro {
+    padding-bottom: 1em;
+    margin: 0 0 1em 0;
+}
+#pagebody form ul.errors {
+    color: red;
+    font-size: 0.85em;
+    padding: 0 0 1em 2em;
+}
+#pagebody form ul.fields {
+    list-style: none;
+    padding: 0;
+    margin:  0;
+}
+#pagebody form ul.fields li {
+    margin-bottom: 0.25em;
+}
+#pagebody form ul.fields li label {
+    float: left;
+    display: block;
+    width: 20ex;
+    padding-top: 0.125em;
+    font-size: 0.85em;
+    margin-right: 1.5ex;
+    text-align: right;
+}
+#pagebody form ul.fields li.required label {
+}
+#pagebody form ul.fields li.required label:before {
+    content: "*\00a0";
+    color: #f33;
+}
+#pagebody form ul.fields li .required_note {
+}
+#pagebody form ul.fields li .required_note span {
+    color: #f33;
+}
+#pagebody form ul li p.notes {
+    margin: 0 0 0 24ex;
+    font-size: 0.75em;
+}
+#pagebody form ul.fields li.error label {
+    color: #ff0000;
+}
+#pagebody form ul.fields li.error input {
+    background-color: #ffeeee;
+}
+#pagebody form ul.fields li.captcha img {
+    display: block;
+    margin-left: 18.5ex;
+}
+
+#pagebody form ul.fields li.text input, #pagebody form ul.fields li.password input {
+    width: 50ex;
+    font-family: arial;
+    font-size: 0.85em;
+    padding: 0.125em;
+}
+#pagebody form ul.fields li.textarea textarea {
+    width: 50ex;
+    height: 15ex;
+    font-family: arial;
+    font-size: 0.85em;
+    padding: 0.125em;
+}
+#pagebody form fieldset.narrow-labels li label {
+    width: 10ex;
+}
+
+
 .main_editform #editor .header {
     position: absolute;
     left: 0; top: 0;

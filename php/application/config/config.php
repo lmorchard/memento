@@ -117,6 +117,8 @@ $config['extension_prefix'] = 'MY_';
 $config['modules'] = array
 (
     MODPATH.'phpunit',
+    MODPATH.'lmo_helpers',
+    MODPATH.'auth_profiles',
 	// MODPATH.'auth',      // Authentication
 	// MODPATH.'kodoc',     // Self-generating documentation
 	// MODPATH.'gmaps',     // Google Maps integration

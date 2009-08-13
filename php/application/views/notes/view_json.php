@@ -1,6 +1,6 @@
 <?php
 $out = array(
-    'href' => "notes/{$note->uuid}"
+    'href' => "profiles/{$profile->screen_name}/notes/{$note->uuid}"
 );
 foreach ($note->as_array() as $name => $value) {
     if ('id' == $name) continue;

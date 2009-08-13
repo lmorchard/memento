@@ -5,7 +5,11 @@
 ?>
 <?php slot::set('page_title', $h['name']) ?>
 
-<form id="editor" method="POST" action="<?=url::base()?>notes/<?=$note->uuid?>?_method=DELETE">
+<?php
+    $form_url = url::base() . 'profiles/' . $screen_name .
+        '/notes/' . $u['uuid'] . '?_method=DELETE';
+?>
+<form id="editor" method="POST" action="<?=$form_url?>">
     <div class="header">        
         <h1><?=$h['name']?></h1>
     </div>

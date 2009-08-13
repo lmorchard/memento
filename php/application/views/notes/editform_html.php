@@ -5,11 +5,15 @@
 ?>
 <?php slot::set('page_title', $h['name']) ?>
 
-<form id="editor" method="POST" action="<?=url::base()?>notes/<?=$note->uuid?>?_method=PUT">
+<?php
+    $form_url = url::base() . 'profiles/' . $screen_name .
+        '/notes/' . $u['uuid'] . '?_method=PUT';
+?>
+<form id="editor" method="POST" action="<?=$form_url?>">
     <input type="hidden" name="modified" value="true" />
     <div class="header">        
         <h1><?=$h['name']?></h1>
-        <a class="back" href="<?=url::base()?>notes/">&lt;&lt; back</a>
+        <a class="back" href="<?=url::base() . 'profiles/'.$screen_name.'/notes/'?>">&lt;&lt; back</a>
     </div>
     <textarea cols="70" rows="20" name="text" id="text"><?=$h['text']?></textarea>
     <div class="footer">
