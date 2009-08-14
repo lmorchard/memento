@@ -3,5 +3,5 @@
 	"timingEnabled": "true",
     "debuggingEnabled": "true",
     "testsEnabled": "true",
-    "runTestsAtLaunch": "true"
+    "runTestsAtLaunch": "false"
 }
