@@ -1,8 +1,13 @@
 function MementoSyncTests(tickleFunction) {
     this.initialize(tickleFunction);
 }
+// Extra long timeout to account for slow network.
+MementoSyncTests.timeoutInterval = 10000;
 
 MementoSyncTests.prototype = function() {
+
+    var test_service_url =
+        'http://tester:tester@dev.memento.decafbad.com/profiles/tester/';
 
     var test_service_data = [
         // Match older than model
@@ -172,6 +177,7 @@ MementoSyncTests.prototype = function() {
 
     // Monkey patch the JSONRequest class to set the test environment
     // override header.
+    /*
     var orig_json_request = Ajax.JSONRequest;
     Ajax.JSONRequest = Class.create(orig_json_request, {
         initialize: function($super, url, options) {
@@ -182,11 +188,11 @@ MementoSyncTests.prototype = function() {
             $super(url, options);
         }
     });
+    */
         
     // The test class begins...
     return /** @lends MementoSyncTests */ {
 
-        timeoutInterval: 5000,
 
         /**
          * Test setup, run before execution of each test.
@@ -238,7 +244,9 @@ MementoSyncTests.prototype = function() {
          * Set up the service by clearing it and loading it up with test data.
          */
         _setupService: function(done) {
-            this.service = new Memento.Service('http://dev.memento.decafbad.com/');
+            this.service = new Memento.Service({
+                service_url: test_service_url
+            });
 
             var chain = new Chain([], this);
 

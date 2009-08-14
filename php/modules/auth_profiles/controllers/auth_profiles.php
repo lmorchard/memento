@@ -23,7 +23,7 @@ class Auth_Profiles_Controller extends Local_Controller
         );
         if (!authprofiles::is_logged_in()) {
             if (in_array(Router::$method, $protected_methods)) {
-                return authprofiles::redirect_login();
+                return authprofiles::unauthorized();
             }
         }
 
@@ -276,7 +276,7 @@ class Auth_Profiles_Controller extends Local_Controller
         if (empty($reset_token) && !authprofiles::is_logged_in()) {
         
             // If no token and not logged in, jump to login.
-            return authprofiles::redirect_login();
+            return authprofiles::unauthorized();
         
         } elseif (empty($reset_token) && authprofiles::is_logged_in()) {
         

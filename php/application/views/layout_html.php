@@ -33,10 +33,12 @@ if ($is_mobile) {
     <body id="<?= Router::$controller . '_' . Router::$method ?>" class="<?= Router::$controller . '_' . Router::$method ?> c_<?=Router::$controller?> m_<?=Router::$method?>">
 
         <div id="pageheader">
-            <h1><a href="<?=url::base()?>">Memento</a></h1>
-            <?php if (slot::exists('crumbs')): ?>
-                <h2><?= slot::get('crumbs') ?></h2>
-            <?php endif ?>
+            <div class="nav">
+                <h1><a href="<?=url::base()?>">Memento</a></h1>
+                <?php if (slot::exists('crumbs')): ?>
+                    <h2><?= slot::get('crumbs') ?></h2>
+                <?php endif ?>
+            </div>
         </div>
 
         <div class="auth">

@@ -3,7 +3,13 @@
 function MementoServiceTests(tickleFunction) {
     this.initialize(tickleFunction);
 }
+// Extra long timeout to account for slow network.
+MementoServiceTests.timeoutInterval = 10000;
+
 MementoServiceTests.prototype = (function () {
+
+    var test_service_url =
+        'http://tester:tester@dev.memento.decafbad.com/profiles/tester/';
 
     var test_data = [
         // Match newer than service
@@ -42,6 +48,7 @@ MementoServiceTests.prototype = (function () {
 
     // Monkey patch the JSONRequest class to set the test environment
     // override header.
+    /*
     var orig_json_request = Ajax.JSONRequest;
     Ajax.JSONRequest = Class.create(orig_json_request, {
         initialize: function ($super, url, options) {
@@ -52,6 +59,7 @@ MementoServiceTests.prototype = (function () {
             $super(url, options);
         }
     });
+    */
         
     return /** @lends MementoServiceTests */ {
         timeoutInterval: 5000,
@@ -67,7 +75,7 @@ MementoServiceTests.prototype = (function () {
             this.tickleFunction = tickleFunction;
             
             this.memento_service = new Memento.Service({
-                service_url: 'http://dev.memento.decafbad.com/'
+                service_url: test_service_url
             });
 
             this.notes = [];
@@ -192,6 +200,7 @@ MementoServiceTests.prototype = (function () {
                     // Force the generation of creation/modified dates
                     delete data.created;
                     delete data.modified;
+                    this.tickleFunction();
                     this.memento_service.addNote(
                         data, check_note, function () { 
                             throw "Note add failed";
@@ -228,7 +237,6 @@ MementoServiceTests.prototype = (function () {
                     }.bind(this);
 
                     this.tickleFunction();
-
                     this.memento_service.findNote(
                         expected_note.uuid, null, check_note,
                         function () { throw "Note find failed"; }
@@ -250,7 +258,6 @@ MementoServiceTests.prototype = (function () {
             ];
 
             this.tickleFunction();
-
             this.memento_service.findAllNotes(
                 function (notes) {
                     notes.each(function (result) {

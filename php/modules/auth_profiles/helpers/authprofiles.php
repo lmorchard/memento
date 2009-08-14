@@ -34,14 +34,15 @@ class authprofiles_Core
      *
      * @param string URL for post-login jump, defaulting to current URL
      */
-    public static function redirect_login($url=null)
+    public static function unauthorized($url=null)
     {
         if (!request::accepts('text/html', TRUE)) {
             header('HTTP/1.1 401 Unauthorized');
             exit;
         }
-        if (null===$url) 
+        if (null===$url) {
             $url = '/'.url::current(TRUE);
+        }
         return url::redirect(
             url::base() . 'login?jump=' . rawurlencode($url)
         );

@@ -1,11 +1,14 @@
 <?php
 $u_screen_name = html::specialchars($screen_name);
-slot::set('page_title', 'Notes for ' . $u_screen_name);
+$home_url = url::base() . 'profiles/'.$screen_name.'/notes/';
+slot::set('page_title', $u_screen_name);
 ?>
-<?php slot::start('crumbs') ?>Notes for <?=$u_screen_name?><?php slot::end() ?>
+<?php slot::start('crumbs') ?>
+    / <?=$u_screen_name?> / <a href="<?=$home_url?>">notes</a> /
+<?php slot::end() ?>
 
 <?php
-$form_url = url::base() . 'profiles/'.$screen_name.'/notes/?format=html'
+$form_url = url::base() . 'profiles/'.$screen_name.'/notes/'
 ?>
 <form method="POST" action="<?=$form_url?>">
     <fieldset class="new_note">

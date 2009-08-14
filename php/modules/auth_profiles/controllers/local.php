@@ -13,6 +13,8 @@ class Local_Controller extends Layout_Controller
      */
     public function __construct() 
     {
+        parent::__construct();
+        
         // Accept HTTP Basic Auth for login, if enabled
         if (Kohana::config('auth_profiles.enable_basic_auth') &&
                 !empty($_SERVER['PHP_AUTH_USER']) && 

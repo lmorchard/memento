@@ -10,7 +10,7 @@ strong, em, b, i {
 
 .auth {
     position: absolute;
-    top: 1em; right: 1em;
+    top: .75em; right: 1em;
 }
 .auth ul.nav {
     margin: 0; padding: 0;
@@ -27,20 +27,23 @@ strong, em, b, i {
     top: 0; left: 0;
     width: 100%;
     background-color: #ddd;
-    height: 3em;
+    height: 2.5em;
+}
+#pageheader .nav {
+    background-color: #ddd;
+    padding: 0.75em 0 0 1em;
 }
 #pageheader h1 {
-    margin: 0; 
-    padding: 0.75em 0 0 1em;
-    font-size: 115%;
+    float: left;
+    margin: 0 0 0 0; 
+    padding: 0 0 0 0;
+    font-size: 90%;
 }
 #pageheader h2 {
-    position: absolute;
-    left: 8em;
-    top: 1em;
-    margin: 0; 
-    padding: 0 0 0 0;
-    font-size: 100%;
+    float: left;
+    margin: 0 0 0 0; 
+    padding: 0 0 0 0.5em;
+    font-size: 90%;
 }
 
 #pagebody form fieldset {

@@ -20,23 +20,9 @@ class Notes_Controller extends Local_Controller
     public function __construct()
     {
         parent::__construct();
-        
+
         $this->note_model = new Note_Model();
 
-        $unauth_methods = array(/*'index', 'view', 'download', 'firstrun'*/);
-
-        if (!authprofiles::is_logged_in()) {
-            if (!in_array(Router::$method, $unauth_methods)) {
-                Session::instance()->set_flash(
-                    'message', 'Login required to manipulate repacks.'
-                );
-                return authprofiles::redirect_login();
-            }
-        }
-    }
-
-    public function _commonSetup()
-    {
         $this->route_params = $this->getRouteParams(array(
             'screen_name' => null,
             'uuid' => null,
@@ -52,7 +38,17 @@ class Notes_Controller extends Local_Controller
             'profile' => $this->profile
         ));
 
-        return $this->route_params;
+        $unauth_methods = array(/*'index', 'view', 'download', 'firstrun'*/);
+
+        if (!authprofiles::is_logged_in()) {
+            if (!in_array(Router::$method, $unauth_methods)) {
+                Session::instance()->set_flash(
+                    'message', 'Login required to manipulate repacks.'
+                );
+                return authprofiles::unauthorized();
+            }
+        }
+
     }
 
     /**
@@ -60,7 +56,7 @@ class Notes_Controller extends Local_Controller
      */
     public function index()
     {
-        extract($this->_commonSetup());
+        extract($this->route_params);
 
         if (!authprofiles::is_allowed('notes', 'view') &&
             !( $this->own && authprofiles::is_allowed('notes', 'view_own'))) {
@@ -146,8 +142,10 @@ class Notes_Controller extends Local_Controller
             '/notes/' . $note->uuid;
 
         switch ($this->preferredAccept()) {
+
             case 'text/html': 
                 return url::redirect($href . ';edit');
+            
             case 'application/json':
                 
                 header("HTTP/1.1 201 Created");
@@ -159,12 +157,14 @@ class Notes_Controller extends Local_Controller
                 $this->view->set_filename('notes/view_json');
                 
                 return;
+            
             default:
                 header("HTTP/1.1 201 Created");
                 $href = url::base() . 'profiles/' . $this->profile->screen_name . 
                     '/notes/' . $note->uuid;
                 header("Location: {$href}");
                 exit;
+
         }
     }
 
@@ -173,7 +173,7 @@ class Notes_Controller extends Local_Controller
      * View resource setup for all HTTP methods
      */
     public function view() {
-        extract($this->_commonSetup());
+        extract($this->route_params);
 
         if (!authprofiles::is_allowed('notes', 'view') &&
             !( $this->own && authprofiles::is_allowed('notes', 'view_own'))) {
@@ -190,11 +190,11 @@ class Notes_Controller extends Local_Controller
         if ('put' === request::method()) {
             if (!$this->note->loaded) {
                 // Require an If-[None-]Match header on blind save.
+                /*
                 if (!$this->input->server('HTTP_IF_MATCH', null) &&
                         !$this->input->server('HTTP_IF_NONE_MATCH', null)) {
                     return Event::run('system.403');
-                }
-                /*
+                        }
                 */
 
                 // PUT request is allowed to blindly save an unknown note.
@@ -222,7 +222,7 @@ class Notes_Controller extends Local_Controller
     /**
      * Method for single note view resource.
      */
-    public function view_GET($uuid)
+    public function view_GET()
     {
         $this->view->note = $this->note;
     }
@@ -230,7 +230,7 @@ class Notes_Controller extends Local_Controller
     /**
      * Respond with just metadata for the note.
      */
-    public function view_HEAD($uuid)
+    public function view_HEAD()
     {
         $this->auto_render = FALSE;
     }
@@ -238,7 +238,7 @@ class Notes_Controller extends Local_Controller
     /**
      * Delete a note.
      */
-    public function view_DELETE($uuid)
+    public function view_DELETE()
     {
         if (!authprofiles::is_allowed('notes', 'delete') &&
             !( $this->own && authprofiles::is_allowed('notes', 'delete_own'))) {
@@ -259,7 +259,7 @@ class Notes_Controller extends Local_Controller
     /**
      * Save details for a note.
      */
-    public function view_PUT($uuid)
+    public function view_PUT()
     {
         if (!authprofiles::is_allowed('notes', 'edit') &&
             !( $this->own && authprofiles::is_allowed('notes', 'edit_own'))) {
@@ -289,19 +289,23 @@ class Notes_Controller extends Local_Controller
             date('r', strtotime($this->note->modified)));
 
         switch ($this->preferredAccept()) {
+
             case 'text/html': 
                 header('HTTP/1.1 200 OK');
                 return url::redirect('profiles/'.$this->profile->screen_name.
                     '/notes/'.$this->note->uuid.';edit');
+            
             case 'application/json':
                 header("HTTP/1.1 200 OK");
                 header('Content-Type: application/json');
                 $this->view->note = $this->note;
                 $this->view->set_filename('notes/view_json');
                 return;
+            
             default:
                 header('HTTP/1.0 204 No Content');
                 exit;
+
         }
     }
 
@@ -311,7 +315,7 @@ class Notes_Controller extends Local_Controller
      */
     public function editform()
     {
-        extract($this->_commonSetup());
+        extract($this->route_params);
         if (!authprofiles::is_allowed('notes', 'edit') &&
             !( $this->own && authprofiles::is_allowed('notes', 'edit_own'))) {
             return Event::run('system.403');
@@ -325,7 +329,7 @@ class Notes_Controller extends Local_Controller
      */
     public function deleteform()
     {
-        extract($this->_commonSetup());
+        extract($this->route_params);
         if (!authprofiles::is_allowed('notes', 'delete') &&
             !( $this->own && authprofiles::is_allowed('notes', 'delete_own'))) {
             return Event::run('system.403');
