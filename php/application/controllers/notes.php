@@ -240,6 +240,8 @@ class Notes_Controller extends Local_Controller
      */
     public function view_DELETE()
     {
+        extract($this->route_params);
+
         if (!authprofiles::is_allowed('notes', 'delete') &&
             !( $this->own && authprofiles::is_allowed('notes', 'delete_own'))) {
             return Event::run('system.403');
@@ -248,7 +250,9 @@ class Notes_Controller extends Local_Controller
         $this->note->delete(); 
         switch ($this->preferredAccept()) {
             case 'text/html': 
-                return url::redirect('notes/');
+                return url::redirect(
+                    'profiles/' .  $this->profile->screen_name . '/notes/'
+                );
             default:
                 header('HTTP/1.0 410 Gone');
                 exit;
