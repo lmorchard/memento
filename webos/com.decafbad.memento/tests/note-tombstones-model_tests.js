@@ -13,6 +13,7 @@ NoteTombstonesModelTests.prototype = function() {
         {
             uuid:     "a-001",
             name:     "alpha",
+            etag:     "8675309",
             text:     "This is note alpha (model)",
             created:  "2009-08-07T03:00:20+00:00",
             modified: "2009-08-07T04:00:00+00:00"
@@ -20,6 +21,7 @@ NoteTombstonesModelTests.prototype = function() {
         {
             uuid:     "b-001",
             name:     "beta",
+            etag:     "10292384",
             text:     "This is note beta (model)",
             created:  "2009-08-07T05:00:20+00:00",
             modified: "2009-08-07T06:00:00+00:00"
@@ -27,6 +29,7 @@ NoteTombstonesModelTests.prototype = function() {
         {
             uuid:     "d-001",
             name:     "delta",
+            etag:     "65747392",
             text:     "This is note delta",
             created:  "2009-08-07T03:00:20+00:00",
             modified: "2009-08-07T04:00:00+00:00"
@@ -34,6 +37,7 @@ NoteTombstonesModelTests.prototype = function() {
         {
             uuid:     "g-001",
             name:     "gamma",
+            etag:     "2837463",
             text:     "This is note gamma (model)",
             created:  "2009-08-07T03:00:20+00:00",
             modified: "2009-08-07T04:00:00+00:00"
@@ -63,6 +67,7 @@ NoteTombstonesModelTests.prototype = function() {
             var chain = new Chain([
                 '_setupModels',
                 '_addNotes',
+                '_deleteNotesAndCheckTombstones',
                 function() { recordResults(Mojo.Test.passed); }
             ], this).start();
         },
@@ -112,6 +117,59 @@ NoteTombstonesModelTests.prototype = function() {
                         data, yield, function() { throw "Note add failed"; }
                     );
                 });
+            }, this);
+            chain.push(main_yield).start();
+        },
+
+        /**
+         * Delete items one by one and assert the correct tombstones
+         * accumulate.
+         */
+        _deleteNotesAndCheckTombstones: function(main_yield) { 
+            var expected_uuids = [];
+
+            var chain = new Chain([], this);
+            test_model_data.each(function (data) {
+
+                // Delete a note.
+                chain.push(function (yield) {
+                    this.tickleFunction();
+                    expected_uuids.push(data.uuid);
+                    this.notes_model.del(data, yield,
+                        function() { throw "Delete failed"; });
+                });
+
+                // Verify the correct tombstones have been created.
+                chain.push(function (yield) {
+                    this.tickleFunction();
+                    this.tombstones_model.findAll(null, null,
+                        function (tombstones) {
+
+                            // Convert tombstone objects to just UUIDs.
+                            var result_uuids = tombstones.map(function(ts) {
+                                return ts.uuid;
+                            });
+                        
+                            // Order not important here.
+                            expected_uuids.sort();
+                            result_uuids.sort();
+                            
+                            // Assert both expected and result UUIDs match.
+                            expected_uuids.each(function(uuid, idx) {
+                                Mojo.requireEqual(uuid, result_uuids[idx]);
+                            });
+                            result_uuids.each(function(uuid, idx) {
+                                Mojo.requireEqual(uuid, expected_uuids[idx]);
+                            });
+
+                            // All good!
+                            yield();
+
+                        },
+                        function () { throw "Tombstones findAll failed"; }
+                    );
+                });
+
             }, this);
             chain.push(main_yield).start();
         },

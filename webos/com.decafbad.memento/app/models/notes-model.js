@@ -50,10 +50,13 @@ Note = Class.create(/** @lends Note# */{
 NotesModel = (function() {
 
     var DEFAULT_DEPOT = 'Memento_Data';
+    var DEFAULT_DEPOT_VERSION = 1;
     var NOTES_BUCKET  = 'notes';
     var NOTES_FILTERS = []; //'name', 'text', 'created', 'modified'];
 
     return Class.create(/** @lends NotesModel# */{
+
+        depot_version: DEFAULT_DEPOT_VERSION,
 
         /** 
          * Model for notes storage.
@@ -72,11 +75,21 @@ NotesModel = (function() {
             }
             this.depot_name = depot_name;
          
-            this.depot = new Mojo.Depot({
-                name: this.depot_name,
-                replace: false,
-                filters: NOTES_FILTERS
-            }, on_success, on_fail);
+            this.depot = new Mojo.Depot(
+                {
+                    name:    this.depot_name,
+                    version: this.depot_version,
+                    replace: false,
+                    filters: NOTES_FILTERS
+                }, 
+                function() { 
+                    this.tombstones_model = new NoteTombstonesModel(
+                        depot_name, on_success, on_fail
+                    );
+                }.bind(this), 
+                on_fail
+            );
+
 
         },
 
@@ -182,8 +195,15 @@ NotesModel = (function() {
             this.depot.remove(
                 NOTES_BUCKET, note.uuid,
                 function (data) {
-                    on_success(note);
-                },
+                    this.tombstones_model.add(
+                        { 
+                            uuid:     note.uuid, 
+                            modified: note.modified, 
+                            etag:     note.etag 
+                        },
+                        function() { on_success(note); }
+                    );
+                }.bind(this),
                 on_fail
             );
         },
