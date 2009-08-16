@@ -63,8 +63,6 @@ Chain = Class.create(/** @lends Chain */{
         var action = this.actions.shift();
 
         var yield = function() {
-            if (arguments.callee.has_run) return;
-            arguments.callee_has_run = true;
             if (false === this.running) {
                 this.next();
             }
@@ -82,8 +80,6 @@ Chain = Class.create(/** @lends Chain */{
                     action(yield);
                 }
             }
-            // Make sure yield has been called.
-            yield();
         } catch(e) {
             if (typeof Mojo.Log.logException != 'undefined') {
                 Mojo.Log.logException(e);
