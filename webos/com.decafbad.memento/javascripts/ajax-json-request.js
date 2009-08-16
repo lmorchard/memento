@@ -1,15 +1,17 @@
 /**
- * Ajax.Request subclass making a few tweaks useful for requests to a
- * JSON-based REST API.
- *
- * @class
- * @author l.m.orchard@pobox.com
+ * @fileOverview Ajax.Request subclass making a few tweaks useful for requests to a
+ *     JSON-based REST API.
+ * @author <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
+ * @version 0.1
  */
 /*jslint laxbreak: true */
 Ajax.JSONRequest = Class.create(Ajax.Request, /** @lends Ajax.JSONRequest */ {
 
     /**
      * Initialize with automatic JSON conversion for options.postBody.
+     *
+     * @author <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
+     * @constructs
      */
     initialize: function($super, url, options) {
 

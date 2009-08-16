@@ -1,8 +1,7 @@
 /**
- * Single note scene assistant.
- *
- * @class
- * @author     <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
+ * @fileOverview Single note scene assistant
+ * @author <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
+ * @version 0.1
  */
 /*jslint laxbreak: true */
 /*global Memento, Note, Mojo, $L, $H, SimpleDateFormat */

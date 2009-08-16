@@ -1,8 +1,7 @@
 /**
- * Memento global package.
- *
- * @namespace
+ * @fileOverview Memento global package.
  * @author <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
+ * @version 0.1
  */
 /*jslint laxbreak: true */
 /*global Mojo, NotesModel */
@@ -24,6 +23,7 @@ var Memento = (function () {
 
         app_menu_items: [
             Mojo.Menu.editItem,
+            { label: "Sync Now", command: 'AppSyncNow' },
             { label: "Preferences...", command: 'AppPreferences' },
             { label: "About", command: 'AppAbout' }
             //{ label: "Help", command: 'AppHelp' }

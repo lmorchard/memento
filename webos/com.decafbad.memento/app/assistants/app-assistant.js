@@ -1,11 +1,9 @@
 /**
- * App assistant.
- *
- * @class
- * @package    Memento
- * @subpackage assistants
- * @author     <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
+ * @fileOverview App assistant for Memento
+ * @author <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
+ * @version 0.1
  */
+/*jslint laxbreak: true */
 function AppAssistant(app_controller) {
 }
 

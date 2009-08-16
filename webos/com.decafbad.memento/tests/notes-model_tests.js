@@ -1,3 +1,8 @@
+/**
+ * @fileOverview Tests for NotesModel
+ * @author <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
+ * @version 0.1
+ */
 /*jslint laxbreak: true */
 function NotesModelTests(tickleFunction) {
     this.initialize(tickleFunction);
@@ -5,7 +10,6 @@ function NotesModelTests(tickleFunction) {
 NotesModelTests.prototype = function() {
 
     var test_model_data = [
-        // Match newer than service
         {
             uuid:     "a-001",
             name:     "alpha",
@@ -13,7 +17,6 @@ NotesModelTests.prototype = function() {
             created:  "2009-08-07T03:00:20+00:00",
             modified: "2009-08-07T04:00:00+00:00"
         },
-        // Match older than service.
         {
             uuid:     "b-001",
             name:     "beta",
@@ -21,7 +24,6 @@ NotesModelTests.prototype = function() {
             created:  "2009-08-07T05:00:20+00:00",
             modified: "2009-08-07T06:00:00+00:00"
         },
-        // Same everything.
         {
             uuid:     "d-001",
             name:     "delta",
@@ -29,7 +31,6 @@ NotesModelTests.prototype = function() {
             created:  "2009-08-07T03:00:20+00:00",
             modified: "2009-08-07T04:00:00+00:00"
         },
-        // Unique to model
         {
             uuid:     "g-001",
             name:     "gamma",
@@ -47,6 +48,8 @@ NotesModelTests.prototype = function() {
          * @constructs
          * @author l.m.orchard@pobox.com
          * @see NotesModel
+         *
+         * @param {function} Test tickle function
          */
         initialize: function (tickleFunction) {
             this.tickleFunction = tickleFunction;

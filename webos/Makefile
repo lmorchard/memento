@@ -1,5 +1,5 @@
 ###########################################################################
-# Memento webOS application 
+# Makefile for automating various webOS SDK development tasks
 #
 # l.m.orchard@pobox.com 
 # http://decafbad.com
@@ -30,8 +30,14 @@ FORCE:
 package:
 	palm-package $(APPID)
 
+tests-emu: package install-app-emu launch-app-emu tail-log-emu
+
 update-emu: package kill-inspector restart-emu install-app-emu \
 	launch-app-emu launch-inspector
+
+tail-log-emu:
+	echo '----------------------------------------'; echo; \
+	echo 'tail -f /var/log/messages | grep $(APPID)' | novacom -d $(NOVACOM_EMU_ID) open tty://
 
 kill-app-emu:
 	-palm-launch -d tcp -c $(APPID)
@@ -53,7 +59,8 @@ install-app-emu: package
 	palm-install -d tcp $(IPK)
 
 launch-app-emu: install-app-emu
-	palm-launch -d tcp -i $(APPID)
+	palm-launch -d tcp $(APPID)
+#	palm-launch -d tcp -i $(APPID)
 
 launch-inspector:
 	sleep 3; 
@@ -70,7 +77,7 @@ remove-device-app: kill-app-device
 restart-device:
 	echo 'killall LunaSysMgr; exit' | novacom -d $(NOVACOM_DEVICE_ID) open tty://
 
-eboot-device:
+reboot-device:
 	echo 'reboot; exit' | novacom -d $(NOVACOM_DEVICE_ID) open tty://
 
 install-app-device: package

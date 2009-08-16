@@ -1,3 +1,8 @@
+/**
+ * @fileOverview Tests for MementoService
+ * @author <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
+ * @version 0.1
+ */
 /*jslint laxbreak: true */
 /*global Mojo, Memento, Chain, Class, Ajax */
 function MementoServiceTests(tickleFunction) {
@@ -70,6 +75,8 @@ MementoServiceTests.prototype = (function () {
          * @constructs
          * @author l.m.orchard@pobox.com
          * @see Memento.Service
+         *
+         * @param {function} Test tickle function
          */
         initialize: function (tickleFunction) {
             this.tickleFunction = tickleFunction;

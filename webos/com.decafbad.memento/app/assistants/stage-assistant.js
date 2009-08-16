@@ -1,10 +1,7 @@
 /**
- * Main stage assistant
- *
- * @class
- * @package    Memento
- * @subpackage assistants
- * @author     <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
+ * @fileOverview Main stage assistant
+ * @author <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
+ * @version 0.1
  */
 /*jslint laxbreak: true */
 /*global Memento, Note, Mojo, $L, $H, SimpleDateFormat */
@@ -46,6 +43,7 @@ StageAssistant.prototype = (function () {
             var currentScene = Mojo.Controller.stageController.activeScene();
 
             if (event.type == Mojo.Event.command) {
+                // @TODO: Turn this into a dispatcher?
                 switch(event.command) {
 
                     case 'AppAbout':
@@ -59,6 +57,12 @@ StageAssistant.prototype = (function () {
                                 {label:$L("OK"), value:""}
                             ]
                         });
+                        break;
+
+                    case 'AppSyncNow':
+                        if (Memento.home_assistant) {
+                            Memento.home_assistant.performSync();
+                        }
                         break;
 
                     case 'AppPreferences':

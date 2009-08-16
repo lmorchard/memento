@@ -1,14 +1,16 @@
 /**
- * Chain of functions, useful in sequencing async calls.
- *
- * @class
- * @author l.m.orchard@pobox.com
+ * @fileOverview Provides the Chain class.
+ * @author <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
+ * @version 0.1
  */
 /*jslint laxbreak: true */
 Chain = Class.create(/** @lends Chain */{
 
     /**
-     * Constructor
+     * Chain of functions, useful in sequencing async calls.
+     *
+     * @constructs
+     * @author <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
      *
      * @param {array} action List of functions for chain
      * @param {object} object Object used as this scope in calls.
@@ -60,21 +62,31 @@ Chain = Class.create(/** @lends Chain */{
 
         var action = this.actions.shift();
 
-        var done = function() {
+        var yield = function() {
+            if (arguments.callee.has_run) return;
+            arguments.callee_has_run = true;
             if (false === this.running) {
                 this.next();
             }
         }.bind(this);
 
-        if (typeof action == 'string') {
-            if (this.object && typeof this.object[action] == 'function') {
-                this.object[action](done);
+        try {
+            if (typeof action == 'string') {
+                if (this.object && typeof this.object[action] == 'function') {
+                    this.object[action](yield);
+                }
+            } else if (typeof action == 'function') {
+                if (this.object) {
+                    action.apply(this.object, [yield]);
+                } else {
+                    action(yield);
+                }
             }
-        } else if (typeof action == 'function') {
-            if (this.object) {
-                action.apply(this.object, [done]);
-            } else {
-                action(done);
+            // Make sure yield has been called.
+            yield();
+        } catch(e) {
+            if (typeof Mojo.Log.logException != 'undefined') {
+                Mojo.Log.logException(e);
             }
         }
         return this;

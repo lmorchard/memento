@@ -1,3 +1,8 @@
+/**
+ * @fileOverview Memento web API service
+ * @author <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
+ * @version 0.1
+ */
 /*jslint laxbreak: true */
 Memento.Service = function(options) {
     this.initialize(options);
@@ -14,7 +19,7 @@ Memento.Service.prototype = function() {
         /**
          * Memento.Service wrapper for web API
          *
-         * @author l.m.orchard@pobox.com
+         * @author <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
          * @constructs
          */
         initialize: function(options) {

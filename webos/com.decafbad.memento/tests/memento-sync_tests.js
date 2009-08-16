@@ -1,6 +1,12 @@
+/**
+ * @fileOverview Tests for MementoSync
+ * @author <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
+ * @version 0.1
+ */
 function MementoSyncTests(tickleFunction) {
     this.initialize(tickleFunction);
 }
+
 // Extra long timeout to account for slow network.
 MementoSyncTests.timeoutInterval = 10000;
 
@@ -200,6 +206,8 @@ MementoSyncTests.prototype = function() {
          * @constructs
          * @author l.m.orchard@pobox.com
          * @see Memento.Sync
+         *
+         * @param {function} Test tickle function
          */
         initialize: function (tickleFunction) {
             this.tickleFunction = tickleFunction;

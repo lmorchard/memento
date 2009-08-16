@@ -1,17 +1,22 @@
 [
 	{
 		"title": "Memento Sync Tests",
-		"source": "tests/memento-sync_tests.js",
+		"source": "tests\/memento-sync_tests.js",
 		"testFunction": "MementoSyncTests"
 	},
 	{
 		"title": "Memento Service Tests",
-		"source": "tests/memento-service_tests.js",
+		"source": "tests\/memento-service_tests.js",
 		"testFunction": "MementoServiceTests"
 	},
 	{
 		"title": "Notes Model Tests",
-		"source": "tests/notes-model_tests.js",
+		"source": "tests\/notes-model_tests.js",
 		"testFunction": "NotesModelTests"
+	},
+	{
+		"title": "Note Tombstones Model Tests",
+		"source": "tests\/note-tombstones-model_tests.js",
+		"testFunction": "NoteTombstonesModelTests"
 	}
 ]

@@ -1,3 +1,8 @@
+/**
+ * @fileOverview This file provides a model for notes
+ * @author <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
+ * @version 0.1
+ */
 /*jslint laxbreak: true */
 Note = Class.create(/** @lends Note# */{
     
@@ -7,7 +12,7 @@ Note = Class.create(/** @lends Note# */{
     /**
      * Note item representation. 
      *
-     * @author l.m.orchard@pobox.com
+     * @author <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
      * @constructs
      *
      * @param {object} data Note properties
@@ -82,7 +87,8 @@ NotesModel = (function() {
          * @param {function} on_failure Failure callback
          */
         reset: function (on_success, on_fail) {
-            this.depot.removeAll();
+            this.depot.removeAll(on_success, on_fail);
+            
         },
         
         /**
