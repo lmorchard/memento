@@ -29,8 +29,13 @@ Ajax.JSONRequest = Class.create(Ajax.Request, /** @lends Ajax.JSONRequest */ {
             if (options[name]) {
                 var orig = options[name];
                 options[name] = function(resp) {
-                    orig(resp.responseJSON, resp);
-                };
+                    if ('onSuccess' == name && !resp.responseJSON && 
+                            options.onFailure) {
+                        options.onFailure(resp);
+                    } else {
+                        orig(resp.responseJSON, resp);
+                    }
+                }.bind(this);
             }
         }.bind(this));
 

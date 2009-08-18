@@ -8,9 +8,11 @@ function MementoSyncTests(tickleFunction) {
 }
 
 // Extra long timeout to account for slow network.
-MementoSyncTests.timeoutInterval = 10000;
+MementoSyncTests.timeoutInterval = 5000;
 
 MementoSyncTests.prototype = function() {
+
+    // {{{ Test data
 
     var test_service_url =
         'http://tester:tester@dev.memento.decafbad.com/profiles/tester/';
@@ -123,6 +125,8 @@ MementoSyncTests.prototype = function() {
         }
     ];
 
+    // }}}
+
     var uuid_cmp = function(a,b) {
         var av = a.uuid, bv = b.uuid;
         return (av<bv) ? -1 : ( (av>bv) ? 1 : 0 );
@@ -170,7 +174,7 @@ MementoSyncTests.prototype = function() {
     // Mock remote service.
     var Mock_MementoService = Class.create(Mock_Store, {
         name: 'Service',
-        findAllNotes: function(on_success, on_failure) {
+        findAllNotes: function(criteria, on_success, on_failure) {
             return this.findAll(null,null,null, on_success, on_failure);
         },
         findNote: function(uuid, on_success, on_failure) {
@@ -371,6 +375,7 @@ MementoSyncTests.prototype = function() {
             // metadata UUIDs.
             this.tickleFunction();
             this.service.findAllNotes(
+                null,
                 function(items) { 
                     items.each(function(item) {
 

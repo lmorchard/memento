@@ -2,6 +2,8 @@
  * @fileOverview This file provides a model for deleted note tombstones
  * @author <a href="http://decafbad.com">l.m.orchard@pobox.com</a>
  * @version 0.1
+ *
+ * @todo refactor this into a general table row mapper
  */
 /*jslint laxbreak: true */
 
@@ -113,7 +115,7 @@ NoteTombstonesModel = (function () {
             });
 
             sql = [
-                "INSERT OR REPLACE INTO 'tombstones'",
+                "INSERT INTO 'tombstones'",
                 "(" + cols.join(', ') + ")",
                 "VALUES",
                 "(" + cols.map(function (c) { return '?'; }).join(', ') + ")"

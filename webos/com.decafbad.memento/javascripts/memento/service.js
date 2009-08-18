@@ -50,11 +50,17 @@ Memento.Service.prototype = function() {
          * @param {function} on_success Success callback
          * @param {function} on_failure Failure callback
          */
-        findAllNotes: function(on_success, on_failure) {
+        findAllNotes: function(criteria, on_success, on_failure) {
             var url = this.options.service_url;
             var req = new Ajax.JSONRequest(url, {
                 method: 'GET',
-                onSuccess: on_success, onFailure: on_failure
+                parameters: criteria || {},
+                onSuccess: function(data, resp) { 
+                    on_success(data, resp);
+                }, 
+                onFailure: function(data, resp) {
+                    on_failure(data, resp);
+                }
             });
         },
 

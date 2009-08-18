@@ -98,6 +98,7 @@ Memento.Sync = Class.create(function () {
         _fetchAllRemoteItems: function (done) {
             this.items_remote = [];
             this.service.findAllNotes(
+                null,
                 function (items) { 
                     this.items_remote = items; 
                     done(); 

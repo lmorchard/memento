@@ -90,7 +90,6 @@ NotesModel = (function() {
                 on_fail
             );
 
-
         },
 
         /**
@@ -201,7 +200,7 @@ NotesModel = (function() {
                             modified: note.modified, 
                             etag:     note.etag 
                         },
-                        function() { on_success(note); }
+                        on_success, on_fail
                     );
                 }.bind(this),
                 on_fail

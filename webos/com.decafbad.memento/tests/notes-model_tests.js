@@ -54,9 +54,6 @@ NotesModelTests.prototype = function() {
         initialize: function (tickleFunction) {
             this.tickleFunction = tickleFunction;
 
-            this.notes_model = new NotesModel('Memento_Notes_Test');
-            this.notes_model.reset();
-
             this.notes = [];
             this.by_id = {};
         },
@@ -66,6 +63,7 @@ NotesModelTests.prototype = function() {
          */
         testAddDelete: function(recordResults) {
             var chain = new Chain([
+                '_setupModel',
                 '_ensureEmpty',
                 '_addNotes',
                 '_deleteNotes',
@@ -79,6 +77,7 @@ NotesModelTests.prototype = function() {
          */
         testCreateAndAdd: function(recordResults) {
             var chain = new Chain([
+                '_setupModel',
                 '_ensureEmpty',
                 '_createAndAddNotes',
                 '_deleteNotes',
@@ -92,6 +91,7 @@ NotesModelTests.prototype = function() {
          */
         testFind: function(recordResults) {
             var chain = new Chain([
+                '_setupModel',
                 '_addNotes',
                 '_checkSavedNotes',
                 function() { recordResults(Mojo.Test.passed); }
@@ -103,6 +103,7 @@ NotesModelTests.prototype = function() {
          */
         testFindAll: function(recordResults) {
             var chain = new Chain([
+                '_setupModel',
                 '_addNotes',
                 '_checkMultipleSavedNotes',
                 function() { recordResults(Mojo.Test.passed); }
@@ -114,10 +115,27 @@ NotesModelTests.prototype = function() {
          */
         testModificationDates: function (recordResults) {
             var chain = new Chain([
+                '_setupModel',
                 '_addNotes',
                 '_checkModificationDates',
                 function() { recordResults(Mojo.Test.passed); }
             ], this).start();
+        },
+
+        /**
+         * Set up the model for the test.
+         */
+        _setupModel: function (main_done) {
+            this.notes_model = new NotesModel(
+                'Memento_Notes_Test',
+                function () {
+                    this.notes_model.reset(
+                        main_done,
+                        function() { throw "Model reset failed"; }
+                    );
+                }.bind(this),
+                function() { throw "Model creation failed"; }
+            );
         },
 
         /**
@@ -348,7 +366,7 @@ NotesModelTests.prototype = function() {
          * Delete notes, and them ensure they're gone.
          */
         _deleteNotes: function (main_done) {
-            var chain = new Chain();
+            var chain = new Chain([], this);
 
             this.notes.each(function(note) {
                 var note_id = note.uuid;
@@ -356,11 +374,10 @@ NotesModelTests.prototype = function() {
                 chain.push(function(done) {
                     this.tickleFunction();
                     this.notes_model.del(
-                        note,
-                        function() { done(); },
+                        note, done,
                         function() { throw "Note delete failed"; }
                     );
-                }.bind(this));
+                });
 
                 chain.push(function(done) {
                     this.tickleFunction();
@@ -373,12 +390,11 @@ NotesModelTests.prototype = function() {
                         },
                         function() { throw "Note find failed"; }
                     );
-                }.bind(this));
+                });
 
             }, this);
 
-            chain.push(main_done);
-            chain.start();
+            chain.push(main_done).start();
         },
 
         EOF:null

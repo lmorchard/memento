@@ -231,7 +231,7 @@ HomeAssistant.prototype = (function () {
                         this.updateList();
                     }.bind(this),
                     function(json) {
-                        Mojo.Log.error('Notes sync FAILED');
+                        Mojo.log('Notes sync FAILED');
                     }.bind(this)
                 );
             }
@@ -244,12 +244,8 @@ HomeAssistant.prototype = (function () {
             Memento.notes_model.findAll(
                 null, null, null,
                 function(notes) {
-                    try {
-                        this.list_model.items = notes;
-                        this.refreshList();
-                    } catch (e) {
-                        Mojo.Log.logException(e);
-                    }
+                    this.list_model.items = notes;
+                    this.refreshList();
                 }.bind(this),
                 function() { 
                     Mojo.Log.error('NotesModel findAll() failure');

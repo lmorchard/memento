@@ -27,7 +27,7 @@ FORCE:
 package:
 	palm-package -o build $(APPID)
 
-tests-emu: package install-app-emu launch-app-emu tail-log-emu
+tests-emu: package install-app-emu launch-app-tests-emu tail-log-emu
 
 update-emu: package kill-inspector restart-emu install-app-emu \
 	launch-app-emu launch-inspector
@@ -56,8 +56,11 @@ install-app-emu: package
 	palm-install -d tcp $(IPK)
 
 launch-app-emu: install-app-emu
+	palm-launch -d tcp -i $(APPID)
+
+launch-app-tests-emu: install-app-emu
+	#palm-launch -p "{mojoConfig:true, debuggingEnabled:true, testsEnabled:true, runTestsAtLaunch:true}" -d tcp $(APPID)
 	palm-launch -d tcp $(APPID)
-#	palm-launch -d tcp -i $(APPID)
 
 launch-inspector:
 	sleep 3; 

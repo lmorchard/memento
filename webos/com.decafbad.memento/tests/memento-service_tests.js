@@ -9,7 +9,7 @@ function MementoServiceTests(tickleFunction) {
     this.initialize(tickleFunction);
 }
 // Extra long timeout to account for slow network.
-MementoServiceTests.timeoutInterval = 10000;
+MementoServiceTests.timeoutInterval = 4000;
 
 MementoServiceTests.prototype = (function () {
 
@@ -17,37 +17,40 @@ MementoServiceTests.prototype = (function () {
         'http://tester:tester@dev.memento.decafbad.com/profiles/tester/';
 
     var test_data = [
-        // Match newer than service
         {
             uuid:     "a-001",
             name:     "alpha",
             text:     "This is note alpha (model)",
-            created:  "2009-08-07T03:00:20+00:00",
-            modified: "2009-08-07T04:00:00+00:00"
+            created:  "2009-08-07T02:00:20+00:00",
+            modified: "2009-08-07T03:00:00+00:00"
         },
-        // Match older than service.
         {
             uuid:     "b-001",
             name:     "beta",
             text:     "This is note beta (model)",
-            created:  "2009-08-07T05:00:20+00:00",
-            modified: "2009-08-07T06:00:00+00:00"
+            created:  "2009-08-07T04:00:20+00:00",
+            modified: "2009-08-07T05:00:00+00:00"
         },
-        // Same everything.
         {
             uuid:     "d-001",
             name:     "delta",
             text:     "This is note delta",
-            created:  "2009-08-07T03:00:20+00:00",
-            modified: "2009-08-07T04:00:00+00:00"
+            created:  "2009-08-07T04:00:20+00:00",
+            modified: "2009-08-07T05:00:00+00:00"
         },
-        // Unique to model
         {
             uuid:     "g-001",
             name:     "gamma",
             text:     "This is note gamma (model)",
-            created:  "2009-08-07T03:00:20+00:00",
-            modified: "2009-08-07T04:00:00+00:00"
+            created:  "2009-08-08T03:00:20+00:00",
+            modified: "2009-08-08T04:00:00+00:00"
+        },
+        {
+            uuid:     "e-001",
+            name:     "epsilon",
+            text:     "This is note epsilon (model)",
+            created:  "2009-08-08T08:00:20+00:00",
+            modified: "2009-08-08T09:00:00+00:00"
         }
     ];
 
@@ -99,9 +102,7 @@ MementoServiceTests.prototype = (function () {
                 '_addNotes',
                 '_deleteAllNotesOneByOne',
                 '_ensureEmpty',
-                function () { 
-                    recordResults(Mojo.Test.passed); 
-                }
+                function () { recordResults(Mojo.Test.passed); }
             ], this).start();
         },
 
@@ -113,9 +114,7 @@ MementoServiceTests.prototype = (function () {
                 '_deleteAllNotes',
                 '_addNotes',
                 '_checkSavedNotes',
-                function () { 
-                    recordResults(Mojo.Test.passed); 
-                }
+                function () { recordResults(Mojo.Test.passed); }
             ], this).start();
         },
 
@@ -127,9 +126,7 @@ MementoServiceTests.prototype = (function () {
                 '_deleteAllNotes',
                 '_addNotes',
                 '_checkMultipleSavedNotes',
-                function () { 
-                    recordResults(Mojo.Test.passed); 
-                }
+                function () { recordResults(Mojo.Test.passed); }
             ], this).start();
         },
 
@@ -141,9 +138,18 @@ MementoServiceTests.prototype = (function () {
                 '_deleteAllNotes',
                 '_addNotes',
                 '_checkModificationDates',
-                function () { 
-                    recordResults(Mojo.Test.passed); 
-                }
+                function () { recordResults(Mojo.Test.passed); }
+            ], this).start();
+        },
+
+        /**
+         * Exercise Modification date updates on save.
+         */
+        testServiceFindSince: function (recordResults) {
+            var chain = new Chain([
+                '_setupService',
+                '_checkFindSince',
+                function () { recordResults(Mojo.Test.passed); }
             ], this).start();
         },
 
@@ -155,9 +161,7 @@ MementoServiceTests.prototype = (function () {
                 '_deleteAllNotes',
                 '_addNotes',
                 '_checkConditionalGet',
-                function () { 
-                    recordResults(Mojo.Test.passed); 
-                }
+                function () { recordResults(Mojo.Test.passed); }
             ], this).start();
         },
 
@@ -166,6 +170,7 @@ MementoServiceTests.prototype = (function () {
          */
         _ensureEmpty: function (main_done) {
             this.memento_service.findAllNotes(
+                null,
                 function (notes) {
                     Mojo.requireEqual(
                         notes.length, 0, "Notes should be empty."
@@ -174,6 +179,29 @@ MementoServiceTests.prototype = (function () {
                 }.bind(this),
                 function () { throw "findAllNotes failure"; }
             );
+        },
+
+        /**
+         * Set up the service by clearing it and loading it up with test data.
+         */
+        _setupService: function(done) {
+            var chain = new Chain([], this);
+
+            chain.push(function(sub_done) {
+                this.memento_service.deleteAllNotes(sub_done, 
+                    function() { throw "service deleteall failed!"; });
+            });
+
+            test_data.each(function(item) {
+                chain.push(function(sub_done) {
+                    this.memento_service.saveNote(
+                        item, true, sub_done,
+                        function() { throw "service save failed!"; }
+                    );
+                });
+            }.bind(this));
+
+            chain.push(done).start();
         },
 
         /**
@@ -205,13 +233,15 @@ MementoServiceTests.prototype = (function () {
                     this.tickleFunction();
 
                     // Force the generation of creation/modified dates
-                    delete data.created;
-                    delete data.modified;
                     this.tickleFunction();
                     this.memento_service.addNote(
-                        data, check_note, function () { 
-                            throw "Note add failed";
-                        }
+                        {
+                            uuid: data.uuid,
+                            name: data.name,
+                            text: data.text
+                        },
+                        check_note, 
+                        function () { throw "Note add failed"; }
                     );
 
                 }.bind(this));
@@ -266,6 +296,7 @@ MementoServiceTests.prototype = (function () {
 
             this.tickleFunction();
             this.memento_service.findAllNotes(
+                null,
                 function (notes) {
                     notes.each(function (result) {
 
@@ -297,20 +328,23 @@ MementoServiceTests.prototype = (function () {
                 
             this.tickleFunction();
 
-            var chain = new Chain();
+            var chain = new Chain([], this);
 
             test_data.each(function (note) {
                 var orig_modified = note.modified;
                 
                 chain.push(function (done) {
-                    note.name += '_changed';
-                    note.text = 'Changed note ' + note.name;
-                    delete note.modified;
-
                     this.tickleFunction();
 
+                    var new_note = {
+                        uuid:     note.uuid,
+                        name:     note.name + '_changed',
+                        text:     'Changed note ' + note.text,
+                        created:  note.created
+                    };
+
                     this.memento_service.saveNote(
-                        note, true,
+                        new_note, true,
                         function (saved) {
                             Mojo.require(orig_modified !== saved.modified,
                                 "Saved modification date should differ");
@@ -318,7 +352,7 @@ MementoServiceTests.prototype = (function () {
                         }.bind(this),
                         function (saved, resp) { throw "Note save failed"; }
                     );
-                }.bind(this));
+                });
 
                 chain.push(function (done) {
                     this.tickleFunction();
@@ -334,12 +368,49 @@ MementoServiceTests.prototype = (function () {
                         },
                         function () { throw "Note find failed"; }
                     );
-                }.bind(this));
+                });
 
             }, this);
 
             chain.push(main_done);
             chain.start();
+        },
+
+        /**
+         * Try fetching notes since the modified dates on each known note and
+         * assert the correct count.
+         */
+        _checkFindSince: function (main_done) {
+            this.tickleFunction();
+            var chain = new Chain([], this);
+
+            test_data.each(function (note, idx) {
+
+                chain.push(function (done) {
+
+                    var expected_count = test_data.filter(function(item) {
+                        return item.modified >= note.modified;
+                    }).length;
+
+                    this.memento_service.findAllNotes(
+                        { since: note.modified },
+                        function (notes) {
+                            this.tickleFunction();
+                            Mojo.requireEqual(
+                                expected_count, notes.length,
+                                "Expected count to match (#{expected}==#{result})", 
+                                { expected: expected_count, result: notes.length }
+                            );
+                            done();
+                        }.bind(this),
+                        function () { throw "Note findAll failed"; }
+                    );
+
+                });
+
+            }, this);
+
+            chain.push(main_done).start();
         },
 
         /**
@@ -435,6 +506,7 @@ MementoServiceTests.prototype = (function () {
          */
         _deleteAllNotesOneByOne: function (main_done) {
             this.memento_service.findAllNotes(
+                null,
                 function (notes) {
                     var sub_chain = new Chain([], this);
 
