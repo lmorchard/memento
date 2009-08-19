@@ -1,7 +1,5 @@
 {
 	"logLevel": "99",
 	"timingEnabled": "true",
-    "debuggingEnabled": "true",
-    "testsEnabled": "true",
-    "runTestsAtLaunch": "false"
+    "debuggingEnabled": "true"
 }

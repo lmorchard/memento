@@ -5,6 +5,7 @@
  */
 /*jslint laxbreak: true */
 function AppAssistant(app_controller) {
+    Mojo.log("APP ASSISTANT CONSTRUCT");
 }
 
 AppAssistant.prototype = (function() {
@@ -14,11 +15,11 @@ AppAssistant.prototype = (function() {
 
         setup: function() {
             Mojo.log("APP ASSISTANT SETUP");
-            Memento.init();
         },
 
         handleLaunch: function(launch_params) {
-            Mojo.log("APP ASSISTANT HANDLE LAUNCH");
+            Mojo.log("APP ASSISTANT HANDLE LAUNCH %j", launch_params);
+            Memento.init(launch_params);
         },
 
         handleCommand: function(event) {

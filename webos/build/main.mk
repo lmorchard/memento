@@ -34,7 +34,7 @@ update-emu: package kill-inspector restart-emu install-app-emu \
 
 tail-log-emu:
 	echo '----------------------------------------'; echo; \
-	echo 'tail -f /var/log/messages | grep $(APPID)' | novacom -d $(NOVACOM_EMU_ID) open tty://
+	echo 'tail -50 -f /var/log/messages | grep $(APPID)' | novacom -d $(NOVACOM_EMU_ID) open tty://
 
 kill-app-emu:
 	-palm-launch -d tcp -c $(APPID)
@@ -59,8 +59,7 @@ launch-app-emu: install-app-emu
 	palm-launch -d tcp -i $(APPID)
 
 launch-app-tests-emu: install-app-emu
-	#palm-launch -p "{mojoConfig:true, debuggingEnabled:true, testsEnabled:true, runTestsAtLaunch:true}" -d tcp $(APPID)
-	palm-launch -d tcp $(APPID)
+	palm-launch -p "{ testsEnabled:true, runTestsAtLaunch:true }" -d tcp $(APPID)
 
 launch-inspector:
 	sleep 3; 
