@@ -8,7 +8,7 @@
 NOVACOM_EMU_ID=$(shell novacom -l | grep emulator | head -1 | cut -d' ' -f2)
 NOVACOM_DEVICE_ID=$(shell novacom -l | grep castle-linux | head -1 | cut -d' ' -f2)
 
-IPK=build/$(APPID)_$(VERSION)_all.ipk
+IPK=bin/$(APPID)_$(VERSION)_all.ipk
 
 all: update-emu
 
@@ -25,7 +25,7 @@ lint: FORCE
 FORCE:
 
 package:
-	palm-package -o build $(APPID)
+	palm-package -o bin src
 
 tests-emu: package install-app-emu launch-app-tests-emu tail-log-emu
 

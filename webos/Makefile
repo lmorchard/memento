@@ -5,4 +5,4 @@
 APPID=com.decafbad.memento
 VERSION=0.0.1
 
-include build/main.mk
+include main.mk
