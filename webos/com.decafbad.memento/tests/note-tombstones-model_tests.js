@@ -142,7 +142,8 @@ NoteTombstonesModelTests.prototype = function() {
                 // Verify the correct tombstones have been created.
                 chain.push(function (yield) {
                     this.tickleFunction();
-                    this.tombstones_model.findAll(null, null,
+                    this.tombstones_model.findAll(
+                        null, null, null,
                         function (tombstones) {
 
                             // Convert tombstone objects to just UUIDs.

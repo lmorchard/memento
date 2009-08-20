@@ -8,11 +8,13 @@
     {"source": "javascripts\/ajax-json-request.js"}, 
 
     {"source": "javascripts\/memento\/memento.js"}, 
+    {"source": "javascripts\/memento\/dbmodel.js"}, 
     {"source": "javascripts\/memento\/service.js"}, 
-    {"source": "javascripts\/memento\/sync.js"}, 
 
     {"source": "app\/models\/notes-model.js"}, 
     {"source": "app\/models\/note-tombstones-model.js"}, 
+
+    {"source": "javascripts\/memento\/sync.js"}, 
 
     {"source": "app\/assistants\/app-assistant.js"},
     {"source": "app\/assistants\/stage-assistant.js"},
