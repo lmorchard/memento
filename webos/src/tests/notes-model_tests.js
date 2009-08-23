@@ -54,7 +54,9 @@ NotesModelTests.prototype = function() {
         initialize: function (tickleFunction) {
             this.tickleFunction = tickleFunction;
 
-            this.notes = [];
+            this.notes = test_model_data.map(function(d) {
+                return new Note(d);
+            });
             this.by_id = {};
         },
 
@@ -162,13 +164,12 @@ NotesModelTests.prototype = function() {
         _addNotes: function (main_done) {
             var chain = new Chain();
 
-            test_model_data.each(function (data) {
+            this.notes.each(function (test_note) {
                 chain.push(function (done) {
 
                     var check_note = function (note) {
 
                         // Retain the note just saved.
-                        this.notes.push(note); 
                         this.by_id[note.uuid] = note;
 
                         // Ensure some properties were auto-set.
@@ -183,8 +184,8 @@ NotesModelTests.prototype = function() {
                     }.bind(this);
 
                     this.tickleFunction();
-                    this.notes_model.add(
-                        data, 
+                    this.notes_model.save(
+                        test_note, 
                         check_note,
                         function() { throw "Note add failed"; }
                     );
@@ -203,7 +204,7 @@ NotesModelTests.prototype = function() {
         _createAndAddNotes: function (main_done) {
             var chain = new Chain();
 
-            test_model_data.each(function (data) {
+            this.notes.each(function (test_note) {
                 chain.push(function (done) {
 
                     var check_note = function (note) {
@@ -223,11 +224,9 @@ NotesModelTests.prototype = function() {
                         done();
                     }.bind(this);
 
-                    var new_note = new Note(data);
-
                     this.tickleFunction();
                     this.notes_model.save(
-                        new_note, 
+                        test_note, 
                         check_note,
                         function() { throw "Note save failed"; }
                     );
@@ -255,14 +254,15 @@ NotesModelTests.prototype = function() {
                         prop_names.each(function(name) {
                             Mojo.requireEqual(
                                 result_note[name], expected_note[name],
-                                'Note ' + name + ' should match'
+                                'Note ' + name + ' should match #{result} == #{expected}',
+                                { result: result_note[name], expected: expected_note[name] }
                             );
                         }.bind(this));
                         done();
                     }.bind(this);
 
                     this.tickleFunction();
-                    this.notes_model.find(
+                    this.notes_model.findByUUID(
                         expected_note.uuid, 
                         check_note,
                         function() { throw "Note find failed"; }
@@ -286,6 +286,8 @@ NotesModelTests.prototype = function() {
             this.notes_model.findAll(
                 null, null, null,
                 function(notes) {
+
+                    Mojo.log("FOUND ALL %j", notes);
                     notes.each(function(result) {
 
                         this.tickleFunction();
@@ -294,7 +296,8 @@ NotesModelTests.prototype = function() {
                         prop_names.each(function(name) {
                             Mojo.requireEqual(
                                 result[name], expected[name],
-                                'Note ' + name + ' should match'
+                                'Note ' + name + ' should match #{result} == #{expected}',
+                                { result: result[name], expected: expected[name] }
                             );
                         }, this);
 
@@ -325,13 +328,17 @@ NotesModelTests.prototype = function() {
                 var orig_modified = note.modified;
                 
                 chain.push(function(done) {
-                    note.name += '_changed';
-                    note.text = 'Changed note ' + note.name;
-                    delete note.modified;
 
+                    var new_note = new Note({
+                        uuid:   note.uuid,
+                        name:   note.name + '_changed',
+                        text:   'Changed note ' + note.name,
+                        created: note.created
+                    });
+                        
                     this.tickleFunction();
                     this.notes_model.save(
-                        note, 
+                        new_note, 
                         function(saved) {
                             Mojo.require(
                                 orig_modified !== saved.modified,
@@ -346,7 +353,7 @@ NotesModelTests.prototype = function() {
 
                 chain.push(function(done) {
                     this.tickleFunction();
-                    this.notes_model.find(
+                    this.notes_model.findByUUID(
                         note.uuid,
                         function (fetched) {
                             Mojo.require(orig_modified != fetched.modified,
@@ -381,7 +388,7 @@ NotesModelTests.prototype = function() {
 
                 chain.push(function(done) {
                     this.tickleFunction();
-                    this.notes_model.find(
+                    this.notes_model.findByUUID(
                         note_id,
                         function(fetched) { 
                             Mojo.require(null === fetched,

@@ -150,7 +150,7 @@ MementoSyncTests.prototype = function() {
             });
             on_success(out);
         },
-        find: function(uuid, on_success, on_fail) {
+        findByUUID: function(uuid, on_success, on_fail) {
             var found = this.test_data.filter(function(item) {
                 return item.uuid == uuid;
             });
@@ -178,7 +178,7 @@ MementoSyncTests.prototype = function() {
             return this.findAll(null,null,null, on_success, on_failure);
         },
         findNote: function(uuid, on_success, on_failure) {
-            return this.find(uuid, on_success, on_failure);
+            return this.findByUUID(uuid, on_success, on_failure);
         },
         saveNote: function(data, on_success, on_failure) {
             return this.save(data, on_success, on_failure);
@@ -243,7 +243,7 @@ MementoSyncTests.prototype = function() {
             test_model_data.each(function(item) {
                 chain.push(function(sub_done) {
                     this.model.save(
-                        item, sub_done,
+                        new Note(item), sub_done,
                         function() { throw "model save failed!"; }
                     );
                 });
@@ -338,7 +338,7 @@ MementoSyncTests.prototype = function() {
 
                         sub_chain.push(function(sub_sub_done) {
                             this.tickleFunction();
-                            this.model.find(item.uuid, 
+                            this.model.findByUUID(item.uuid, 
                                 function(item) {
                                     result_notes.push(item); 
                                     sub_sub_done();

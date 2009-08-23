@@ -49,10 +49,10 @@ var Memento = (function () {
             );
 
             var fw_config = Mojo.Environment.frameworkConfiguration;
-            this.tests_enabled = 
+            this.tests_enabled =
                 ('true' === fw_config.testsEnabled) || 
                 launch_params.testsEnabled;
-            this.run_tests_at_launch = 
+            this.run_tests_at_launch =
                 ('true' === fw_config.runTestsAtLaunch) ||
                 launch_params.runTestsAtLaunch;
             

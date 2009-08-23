@@ -57,6 +57,9 @@ NoteTombstonesModelTests.prototype = function() {
          */
         initialize: function (tickleFunction) {
             this.tickleFunction = tickleFunction;
+            this.notes = test_model_data.map(function(data) {
+                return new Note(data);
+            });
         },
 
         /**
@@ -75,76 +78,78 @@ NoteTombstonesModelTests.prototype = function() {
         /**
          * Setup and reset models.
          */
-        _setupModels: function (yield) {
+        _setupModels: function (done) {
             var chain = new Chain([
-                function (sub_yield) {
+                function (sub_done) {
                     this.notes_model = new NotesModel(
-                        'Memento_Notes_Test', sub_yield,
+                        'Memento_Notes_Test', sub_done,
                         function () { throw "Notes model setup failed!"; }
                     );
                 },
-                function (sub_yield) {
+                function (sub_done) {
                     this.notes_model.reset(
-                        sub_yield, 
+                        sub_done, 
                         function () { throw "Notes model reset failed!"; }
                     );
                 },
-                function (sub_yield) {
+                function (sub_done) {
                     this.tombstones_model = new NoteTombstonesModel(
-                        'Memento_Notes_Test', sub_yield,
+                        'Memento_Notes_Test', sub_done,
                         function () { throw "Tombstones model setup failed!"; }
                     );
                 },
-                function (sub_yield) {
+                function (sub_done) {
                     this.tombstones_model.reset(
-                        sub_yield, 
+                        sub_done, 
                         function () { throw "Tombstones model reset failed!"; }
                     );
                 },
-                yield
+                done
             ], this).start();
         },
 
         /**
           * Chain a series of note adds.
           */
-        _addNotes: function (main_yield) {
+        _addNotes: function (main_done) {
             var chain = new Chain([], this);
-            test_model_data.each(function (data) {
-                chain.push(function (yield) {
+            this.notes.each(function (data) {
+                chain.push(function (done) {
                     this.tickleFunction();
-                    this.notes_model.add(
-                        data, yield, function() { throw "Note add failed"; }
+                    this.notes_model.save(
+                        data, done, function() { throw "Note add failed"; }
                     );
                 });
             }, this);
-            chain.push(main_yield).start();
+            chain.push(main_done).start();
         },
 
         /**
          * Delete items one by one and assert the correct tombstones
          * accumulate.
          */
-        _deleteNotesAndCheckTombstones: function(main_yield) { 
+        _deleteNotesAndCheckTombstones: function(main_done) { 
             var expected_uuids = [];
 
             var chain = new Chain([], this);
-            test_model_data.each(function (data) {
+            this.notes.each(function (data) {
 
                 // Delete a note.
-                chain.push(function (yield) {
+                chain.push(function (done) {
                     this.tickleFunction();
                     expected_uuids.push(data.uuid);
-                    this.notes_model.del(data, yield,
+                    this.notes_model.del(data, done,
                         function() { throw "Delete failed"; });
                 });
-
+                
                 // Verify the correct tombstones have been created.
-                chain.push(function (yield) {
+                chain.push(function (done) {
                     this.tickleFunction();
                     this.tombstones_model.findAll(
                         null, null, null,
                         function (tombstones) {
+
+                            Mojo.log("TOMBSTONES %j", tombstones);
 
                             // Convert tombstone objects to just UUIDs.
                             var result_uuids = tombstones.map(function(ts) {
@@ -164,7 +169,7 @@ NoteTombstonesModelTests.prototype = function() {
                             });
 
                             // All good!
-                            yield();
+                            done();
 
                         },
                         function () { throw "Tombstones findAll failed"; }
@@ -172,7 +177,7 @@ NoteTombstonesModelTests.prototype = function() {
                 });
 
             }, this);
-            chain.push(main_yield).start();
+            chain.push(main_done).start();
         },
 
         EOF: null

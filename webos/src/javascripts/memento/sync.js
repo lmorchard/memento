@@ -83,7 +83,8 @@ Memento.Sync = Class.create(function () {
          */
         _fetchAllLocalItems: function (done) {
             this.items_local = [];
-            this.model.findAll(null, null, null,
+            this.model.findAll(
+                null, null, null,
                 function (items) { 
                     this.items_local = items; 
                     done(); 
@@ -187,8 +188,10 @@ Memento.Sync = Class.create(function () {
          */
         _overwriteRemote: function (done, uuid) {
             Mojo.Log.info('Memento.Sync: Overwrite remote %s', uuid);
-            this.model.find(uuid, function (note) {
-                this.service.saveNote(note, true, done, this.full_sync_failure);
+            this.model.findByUUID(uuid, function (note) {
+                this.service.saveNote(
+                    note, true, done, this.full_sync_failure
+                );
             }.bind(this), this.full_sync_failure);
         },
 
@@ -198,7 +201,9 @@ Memento.Sync = Class.create(function () {
         _overwriteLocal: function (done, uuid) {
             Mojo.Log.info('Memento.Sync: Overwrite local %s', uuid);
             this.service.findNote(uuid, null, function (note) {
-                this.model.save(note, done, this.full_sync_failure);
+                this.model.save(
+                    new Note(note), done, this.full_sync_failure
+                );
             }.bind(this), this.full_sync_failure);
         },
 

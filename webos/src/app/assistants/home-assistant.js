@@ -91,7 +91,7 @@ HomeAssistant.prototype = (function () {
          * Open a given note in the editing scene, first looking it up by UUID.
          */
         openNoteByUUID: function(uuid) {
-            Memento.notes_model.find(uuid, this.openNote.bind(this));
+            Memento.notes_model.findByUUID(uuid, this.openNote.bind(this));
         },
 
         /**
@@ -151,7 +151,7 @@ HomeAssistant.prototype = (function () {
          * Delete a given note, first looking it up by UUID.
          */
         deleteNoteByUUID: function(uuid) {
-            Memento.notes_model.find(uuid, function(note) {
+            Memento.notes_model.findByUUID(uuid, function(note) {
                 Memento.notes_model.del(note, function() { 
                     this.updateList();
                     if (!Memento.prefs.sync_enabled || !Memento.prefs.sync_on_delete) {
@@ -283,7 +283,7 @@ HomeAssistant.prototype = (function () {
                 return;
             }
             var func = this['handleCommand'+event.command];
-            if (typeof func != 'undefined') {
+            if (typeof func !== 'undefined') {
                 return func.apply(this, [event]);
             }
         },

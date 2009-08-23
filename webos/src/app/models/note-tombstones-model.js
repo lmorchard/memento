@@ -9,7 +9,7 @@
 NoteTombstone = Class.create(Memento.DBObject, /** @lends NoteTombstone# */{
 
     /** List of known properties */
-    property_names: [ 'uuid', 'modified', 'etag' ],
+    property_names: [ 'id', 'uuid', 'modified', 'etag' ],
 
     /**
      * Deleted note tombstone representation
@@ -47,14 +47,17 @@ NoteTombstonesModel = (function () {
         table_name: 'tombstones',
         
         table_schema: [
+            //"DROP TABLE IF EXISTS 'tombstones'; ",
             "CREATE TABLE IF NOT EXISTS 'tombstones' (",
             "   'id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,",
-            "   'uuid' TEXT NOT NULL,",
+            "   'uuid' TEXT NOT NULL UNIQUE ON CONFLICT REPLACE,",
             "   'etag' TEXT DEFAULT '',",
             "   'modified' TEXT NOT NULL,",
             "   UNIQUE ('id', 'uuid')",
             ")"
         ].join(' '),
+
+        row_class: NoteTombstone,
 
         EOF: null
     });
