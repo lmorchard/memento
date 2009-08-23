@@ -16,7 +16,7 @@ docs: FORCE
 	jsdoc -c=docs/jsdoc-toolkit.conf
 
 lint: FORCE
-	for fn in `find $(APPID) -type f -not -path '*/vendor/*' -name '*js'`; do \
+	for fn in `find src -type f -not -path '*/vendor/*' -name '*js'`; do \
 		echo '----------------------------------------'; \
 		echo $$fn; \
 		cat $$fn | jslint; \
