@@ -79,6 +79,8 @@ Memento.DBModel = Class.create(/** @lends Memento.DBModel# */{
         this.db_version = this.db_version;
 
         // Use a global singleton db instance, opening it first if necessary.
+        // Opening a handle for each model instance results in DB locked
+        // failures.
         if (!Memento.db) {
             Memento.db = openDatabase(
                 this.db_name, this.db_version, this.db_name
