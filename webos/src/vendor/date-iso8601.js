@@ -51,7 +51,7 @@ Date.prototype.toISO8601String = function (format, offset) {
     var date;
     if (!format) { format = 5; }
     if (!offset) {
-        offset = 'Z';
+        offset = '+00:00';
         date = this;
     } else {
         var d = offset.match(/([-+])([0-9]{2}):([0-9]{2})/);
