@@ -31,9 +31,9 @@ class Note_tombstone_Model extends ORM
     public function find_modified_in_timerange($since=null, $until=null)
     {
         $since = strtotime($since);
-        if ($since) $this->where('created >=', gmdate('c', $since));
+        if ($since) $this->where('created >=', gmdate('Y-m-d H:i:s', $since));
         $until = strtotime($until);
-        if ($until) $this->where('created <=', gmdate('c', $until));
+        if ($until) $this->where('created <=', gmdate('Y-m-d H:i:s', $until));
         return $this->find_all();
     }
 

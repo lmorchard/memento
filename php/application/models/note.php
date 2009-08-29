@@ -30,9 +30,9 @@ class Note_Model extends ORM
     {
         $this->where('profile_id', $profile_id);
         $since = strtotime($since);
-        if ($since) $this->where('modified >=', gmdate('c', $since));
+        if ($since) $this->where('modified >=', gmdate('Y-m-d H:i:s', $since));
         $until = strtotime($until);
-        if ($until) $this->where('modified <=', gmdate('c', $until));
+        if ($until) $this->where('modified <=', gmdate('Y-m-d H:i:s', $until));
         return $this->find_all();
     }
 
