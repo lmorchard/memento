@@ -26,12 +26,12 @@ MementoSyncTests.prototype = function() {
     var later_time = new Date( today.getTime() + (1000*60*60) ).toISO8601String();
 
     var day = function(base, time) {
-        var parts  = time.split(':'), part,
-            offset = (parts[0]*60*60) + (parts[1]*60) + parts[2] * 1000,
-            time   = new Date( base.getTime() + offset ),
-            str    = time.toISO8601String().replace('Z', '+00:00');
+        var parts    = time.split(':'), part,
+            offset   = (parts[0]*60*60) + (parts[1]*60) + parts[2] * 1000,
+            new_time = new Date( base.getTime() + offset ),
+            str      = new_time.toISO8601String().replace('Z', '+00:00');
         return str;
-    }
+    };
     var day_1 = function (t) { return day(yesterday, t); };
     var day_2 = function (t) { return day(tomorrow, t); };
 
