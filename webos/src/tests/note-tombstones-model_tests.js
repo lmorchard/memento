@@ -4,6 +4,7 @@
  * @version 0.1
  */
 /*jslint laxbreak: true */
+/*global Mojo, Memento, Class, NotesModel, Chain, $H, Note, NotesModel, NoteTombstonesModel */
 function NoteTombstonesModelTests(tickleFunction) {
     this.initialize(tickleFunction);
 }
@@ -129,7 +130,7 @@ NoteTombstonesModelTests.prototype = function() {
          * accumulate.
          */
         _deleteNotesAndCheckTombstones: function(main_done) { 
-            var expected_uuids = [];
+            var expected_tombstone_uuids = [];
 
             var chain = new Chain([], this);
             this.notes.each(function (data) {
@@ -137,7 +138,7 @@ NoteTombstonesModelTests.prototype = function() {
                 // Delete a note.
                 chain.push(function (done) {
                     this.tickleFunction();
-                    expected_uuids.push(data.uuid);
+                    expected_tombstone_uuids.push(data.uuid);
                     this.notes_model.del(data, done,
                         function() { throw "Delete failed"; });
                 });
@@ -149,35 +150,99 @@ NoteTombstonesModelTests.prototype = function() {
                         null, null, null,
                         function (tombstones) {
 
-                            Mojo.log("TOMBSTONES %j", tombstones);
+                            expected_tombstone_uuids.sort();
 
                             // Convert tombstone objects to just UUIDs.
-                            var result_uuids = tombstones.map(function(ts) {
+                            var result_tombstone_uuids = tombstones.map(function(ts) {
                                 return ts.uuid;
                             });
-                        
-                            // Order not important here.
-                            expected_uuids.sort();
-                            result_uuids.sort();
+                            result_tombstone_uuids.sort();
                             
-                            // Assert both expected and result UUIDs match.
-                            expected_uuids.each(function(uuid, idx) {
-                                Mojo.requireEqual(uuid, result_uuids[idx]);
-                            });
-                            result_uuids.each(function(uuid, idx) {
-                                Mojo.requireEqual(uuid, expected_uuids[idx]);
-                            });
+                            this.requireArraysEqual(
+                                expected_tombstone_uuids, result_tombstone_uuids
+                            );
 
                             // All good!
                             done();
 
-                        },
+                        }.bind(this),
+                        function () { throw "Tombstones findAll failed"; }
+                    );
+                });
+
+                // Verify the correct tombstones and notes
+                chain.push(function (done) {
+                    this.tickleFunction();
+                    this.notes_model.findAllWithTombstones(
+                        null, null, null,
+                        function (items) {
+
+                            expected_tombstone_uuids.sort();
+                            Mojo.log("Expected tombstone %j", expected_tombstone_uuids);
+
+                            // Find known item UUIDs not in tombstone set.
+                            var expected_item_uuids = items
+                                .filter(function(i) {
+                                    return -1 === expected_tombstone_uuids.indexOf(i.uuid);
+                                })
+                                .map(function(i) { return i.uuid; });
+                            expected_item_uuids.sort();
+                            Mojo.log("Expected item %j", expected_item_uuids);
+
+                            // Get UUIDs of tombstones found.
+                            var result_tombstone_uuids = items
+                                .filter(function(i) { return true === i.tombstone; })
+                                .map(function(i) { return i.uuid; });
+                            result_tombstone_uuids.sort();
+                            Mojo.log("Result tombstone: %j", result_tombstone_uuids);
+
+                            // Get UUIDs of items found.
+                            var result_item_uuids = items
+                                .filter(function(i) { return true !== i.tombstone; })
+                                .map(function(i) { return i.uuid; });
+                            result_item_uuids.sort();
+                            Mojo.log("Result item: %j", result_item_uuids);
+
+                            // Assert both expected and result UUIDs match.
+                            this.requireArraysEqual(
+                                expected_tombstone_uuids, result_tombstone_uuids
+                            );
+                            this.requireArraysEqual(
+                                expected_item_uuids, result_item_uuids
+                            );
+
+                            done();
+
+                        }.bind(this),
                         function () { throw "Tombstones findAll failed"; }
                     );
                 });
 
             }, this);
+
             chain.push(main_done).start();
+        },
+
+        /**
+         * Require that the contents of two arrays are equal.
+         *
+         * @param {array} First array
+         * @param {array} Second array
+         */
+        requireArraysEqual: function (a, b) {
+            var i;
+            Mojo.requireEqual(
+                a.length, b.length,
+                'Tombstone UUID count should match (#{a}==#{b})',
+                { a: a.length, b: b.length }
+            );
+            for (i=0; i<a.length; i++) {
+                Mojo.requireEqual(
+                    a[i], b[i],
+                    'Items should match (#{a} == #{b})',
+                    { a: a[i], b: b[i] }
+                );
+            }
         },
 
         EOF: null

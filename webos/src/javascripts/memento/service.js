@@ -88,6 +88,9 @@ Memento.Service.prototype = function() {
                 on304: function(resp) {
                     on_success(null, resp);
                 },
+                on404: function(data, resp) {
+                    on_failure();
+                },
                 onFailure: function(data, resp) {
                     on_failure();
                 }

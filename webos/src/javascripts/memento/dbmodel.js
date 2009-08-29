@@ -35,13 +35,23 @@ Memento.DBObject = Class.create(/** @lends Memento.DBObject# */{
      * @return {hash}
      */
     asHash: function() {
-        var h = $H();
+        return $H(this.toObject());
+    },
+
+    /**
+     * Convert the contents of this object into a hash suitable for database
+     * storage.
+     *
+     * @return {object}
+     */
+    toObject: function () {
+        var o = {};
         this.property_names.each(function (name) {
             if (typeof this[name] != 'undefined') {
-                h.set(name, this[name]);
+                o[name] = this[name];
             }
         }.bind(this));
-        return h;
+        return o;
     }
 
 });

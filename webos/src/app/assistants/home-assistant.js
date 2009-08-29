@@ -226,6 +226,9 @@ HomeAssistant.prototype = (function () {
                 this.updateList();
             } else {
                 Memento.notes_sync.startSync(
+                    function () {
+                        // TODO: Handle conflict
+                    },
                     function() {
                         Mojo.log('Notes sync completed');
                         this.updateList();

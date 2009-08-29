@@ -100,17 +100,21 @@ class Note_Model extends ORM
     
         if ($id === NULL AND $this->loaded) {
             $uuid = $this->uuid;
-        } else if ($id !==null) {
+            $id   = $this->id;
+            $note = $this;
+        } else if ($id !== null) {
             $note = $this->find($id);
             if ($note->loaded) $uuid = $note->uuid;
         }
 
         if (NULL !== $uuid) {
             ORM::factory('note_tombstone')
-                ->set(array('uuid'=>$uuid))->save();
+                ->set(array('uuid'=>$uuid, 'etag'=>$note->etag()))->save();
         }
 
-        return parent::delete($id);
+		$rv = $this->db->where('id', $id)->delete($this->table_name);
+
+		return $this->clear();
     }
 
     /**

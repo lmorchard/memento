@@ -6,6 +6,7 @@
  * @todo refactor this into a general table row mapper
  */
 /*jslint laxbreak: true */
+/*global Mojo, Memento, Class, NotesModel, Chain, $H, Note, NotesModel, NoteTombstonesModel */
 Note = Class.create(Memento.DBObject, /** @lends NoteTombstone# */{
 
     /** List of known properties */
@@ -80,6 +81,66 @@ NotesModel =  Class.create(Memento.DBModel, /** @lends NotesModel# */{
     },
 
     /**
+     * Reset the model by deleting all items, including associated tombstones.
+     *
+     * @param {function} on_success Success callback
+     * @param {function} on_failure Failure callback
+     */
+    reset: function ($super, on_success, on_fail) {
+        $super(function () {
+            this.tombstones_model.reset(on_success, on_fail);
+        }.bind(this), on_fail);
+    },
+
+    /**
+     * Find notes, and merge in tombstones.
+     *
+     * @param {hash}     criteria   Search griteria
+     * @param {int}      limit      Maximum objects to return
+     * @param {int}      offset     Offset into record set to return
+     * @param {function} on_success Callback function for query success
+     * @param {function} on_fail    Callback function for query failure
+     */
+    findAllWithTombstones: function (criteria, limit, offset, on_success, on_fail) {
+
+        // First, find all the existing items.
+        this.findAll(
+            criteria, limit, offset,
+            function (items) {
+
+                // Next, find the tombstones.
+                this.tombstones_model.findAll(
+                    criteria, limit, offset,
+                    function (tombstones) {
+
+                        // Flag the tombstones before merge, to discriminate
+                        // from existing items.
+                        tombstones = tombstones.map(function(t) {
+                            t.tombstone = true; 
+                            return t;
+                        });
+
+                        // Merge the two lists into one flat set, sort by
+                        // modification time.
+                        var merged = [ items, tombstones ].flatten();
+                        merged.sort(function(a,b) {
+                            var av = a.modified, bv = b.modified;
+                            return (av<bv) ? -1 : ( (av>bv) ? 1 : 0 );
+                        });
+
+                        // All done, return the finished set.
+                        on_success(merged);
+
+                    }.bind(this),
+                    on_fail
+                );
+
+            }.bind(this),
+            on_fail
+        );
+    },
+
+    /**
      * Find a single note by UUID.
      *
      * @param {string}   uuid UUID
@@ -90,8 +151,7 @@ NotesModel =  Class.create(Memento.DBModel, /** @lends NotesModel# */{
         this.findAll(
             { where: ['uuid=?', uuid] }, 1, 0,
             function (rows) {
-                var row = (rows.length) ? rows[0] : null;
-                on_success(row);
+                on_success((rows.length) ? rows[0] : null);
             },
             on_fail
         );
@@ -117,12 +177,10 @@ NotesModel =  Class.create(Memento.DBModel, /** @lends NotesModel# */{
             }
             t.executeSql(sql, params, 
                 function(t, r) { 
-                    t.executeSql(
-                        'INSERT INTO tombstones (uuid, modified, etag) ' +
-                            'VALUES (?,?,?)',
-                        [ note.uuid, note.modified, note.etag ],
-                        on_success,
-                        on_fail
+                    // Pair every note deletion with a tombstone save.
+                    this.tombstones_model.save(
+                        new NoteTombstone(note),
+                        on_success, on_fail
                     );
                 }.bind(this), 
                 on_fail

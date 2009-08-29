@@ -102,14 +102,8 @@ class Notes_Controller extends Local_Controller
         if (Kohana::config('notes.enable_delete_all') !== true) {
             Event::run('system.403');
         } else {
-            foreach ($this->notes as $note) {
-                $note->delete();
-            }
-            if (!empty($this->tombstones)) {
-                foreach ($this->tombstones as $tombstone) {
-                    $tombstone->delete();
-                }
-            }
+            ORM::factory('note')->delete_all();
+            ORM::factory('note_tombstone')->delete_all();
             header('HTTP/1.1 410 Gone');
             exit;
         }
