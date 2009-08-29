@@ -29,7 +29,7 @@ package:
 
 tests-emu: package install-app-emu launch-app-tests-emu tail-log-emu
 
-update-emu: package kill-inspector restart-emu install-app-emu \
+update-emu: package kill-inspector remove-app-emu restart-emu install-app-emu \
 	launch-app-emu launch-inspector
 
 tail-log-emu:
@@ -65,7 +65,11 @@ launch-inspector:
 	sleep 3; 
 	open -g -a Palm\ Inspector;
 
-update-device: package kill-app-device install-app-device launch-app-device
+tests-device: package kill-app-device remove-device-app install-app-device \
+	launch-app-tests-device
+
+update-device: package kill-app-device remove-device-app install-app-device \
+	launch-app-device
 
 kill-app-device:
 	-palm-launch -d usb -c $(APPID)
@@ -84,4 +88,7 @@ install-app-device: package
 
 launch-app-device: install-app-device
 	palm-launch -d usb -i $(APPID)
+
+launch-app-tests-device: install-app-emu
+	palm-launch -p "{ testsEnabled:true, runTestsAtLaunch:true }" -d usb $(APPID)
 
