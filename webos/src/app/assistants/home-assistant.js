@@ -43,18 +43,15 @@ HomeAssistant.prototype = (function () {
             );
 
             // Connect up the tap and delete events.
-            var notes_list = this.controller.get('notes-list');
-            notes_list.observe(Mojo.Event.listTap, function(ev) {
-                this.openNoteByUUID(ev.item.uuid);
-            }.bind(this));
-            notes_list.observe(Mojo.Event.listDelete, function(ev) {
-                this.deleteNoteByUUID(ev.item.uuid);
-            }.bind(this));
-
-            // Wire up the sort order selector in the header.
-            this.controller.get('sort-selector').observe(
-                Mojo.Event.tap, this.showSortMenu.bind(this)
-            );
+            this.listeners = [
+                ['notes-list', Mojo.Event.listTap, function(ev) {
+                    this.openNoteByUUID(ev.item.uuid);
+                }], 
+                ['notes-list', Mojo.Event.listDelete, function(ev) {
+                    this.deleteNoteByUUID(ev.item.uuid);
+                }],
+                ['sort-selector', Mojo.Event.tap, this.showSortMenu ]
+            ].map(Memento.mapListener, this);
 
             // Set up the new note command button.
             var command_menu_model = {items: [
@@ -76,16 +73,23 @@ HomeAssistant.prototype = (function () {
         },
 
         /**
+         * On scene cleanup, clear all listeners.
+         */
+        cleanup: function () {
+            Memento.clearListeners(this.listeners);
+        },
+
+        /**
          * On scene activation, update the notes list.
          */
-        activate: function (event) {
+        activate: function () {
             this.performSync();
         },
 
         /**
          * On scene deactivation, do...
          */
-        deactivate: function (event) {
+        deactivate: function () {
             this.updateList();
         },
 
