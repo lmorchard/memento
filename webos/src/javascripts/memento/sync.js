@@ -27,10 +27,19 @@ Memento.Sync = Class.create(function () {
         startSync: function (last_sync, on_conflict, on_success, on_failure) {
             Mojo.log('Memento.Sync: startSync()');
 
+            if (typeof last_sync === 'undefined') {
+                last_sync = null;
+            }
+
             this.conflict  = on_conflict;
             this.success   = on_success;
-            this.failure   = on_failure;
             this.last_sync = last_sync;
+
+            this.failure = function (reason) {
+                return function() {
+                    on_failure(reason, Array.from(arguments));
+                }.bind(this);
+            }.bind(this);
 
             if (null === this.last_sync) {
                 Mojo.log("Memento.Sync: Full sync starting");
@@ -65,7 +74,7 @@ Memento.Sync = Class.create(function () {
                 function (items) { 
                     this.items_local = items; done(); 
                 }.bind(this),
-                this.failure
+                this.failure('fetchLocalItems')
             );
         },
 
@@ -85,7 +94,7 @@ Memento.Sync = Class.create(function () {
                 function (items) { 
                     this.items_remote = items; done(); 
                 }.bind(this),
-                this.failure
+                this.failure('fetchRemoteItems')
             );
         },
 
@@ -123,6 +132,7 @@ Memento.Sync = Class.create(function () {
             var sub_chain = new Chain([], this);
 
             $H(this.paired_items).each(function (pair) {
+                Mojo.log("Memento.Sync: Process %j", pair);
                 sub_chain.push(function (sub_done) {
                     this._processSyncItem(
                         sub_done, pair.key, 
@@ -153,7 +163,9 @@ Memento.Sync = Class.create(function () {
             var local_modified  = (new Date()).setISO8601(local.modified),
                 remote_modified = (new Date()).setISO8601(remote.modified);
 
-            if (null !== this.last_sync && local_modified !== remote_modified) {
+            if (null !== this.last_sync && 
+                local_modified !== remote_modified && 
+                local.etag != remote.etag) {
                 
                 Mojo.log('Memento.Sync: %s conflict! ' + 
                     'Both changed since last sync', uuid);
@@ -198,12 +210,19 @@ Memento.Sync = Class.create(function () {
          */
         _overwriteRemote: function (done, uuid, local, remote) {
 
-            if (local.tombstone) {
+            if (null === this.last_sync && local.tombstone) {
+                
+                Mojo.log('Memento.Sync: Local tombstone ignored %s', uuid);
+                return done();
+
+            } else if (local.tombstone) {
 
                 // Delete the remote item.
                 Mojo.log('Memento.Sync: Delete remote %s', uuid);
                 this.service.deleteNote(
-                    remote.uuid, remote.etag, true, done, this.failure
+                    // HACK: Ignore remote deletion errors.  
+                    // Should really just ignore 404s.
+                    uuid, local.etag, true, done, done //this.failure('deleteRemote')
                 );
 
             } else {
@@ -216,11 +235,12 @@ Memento.Sync = Class.create(function () {
                     this.service.saveNote(
                         note, true, function(saved_note) {
                             this.model.save(
-                                new Note(saved_note), done, this.failure
+                                new Note(saved_note), done, 
+                                this.failure('overwriteRemote (inner)')
                             );
-                        }.bind(this), this.failure
+                        }.bind(this), this.failure('overwriteRemote (outer)')
                     );
-                }.bind(this), this.failure);
+                }.bind(this), this.failure('overwriteRemote'));
 
             }
 
@@ -231,11 +251,16 @@ Memento.Sync = Class.create(function () {
          */
         _overwriteLocal: function (done, uuid, local, remote) {
 
-            if (remote.tombstone) {
+            if (null === this.last_sync && remote.tombstone) {
+                
+                Mojo.log('Memento.Sync: Remote tombstone ignored %s', uuid);
+                return done();
+
+            } else if (remote.tombstone) {
 
                 // Delete the local item.
                 Mojo.log('Memento.Sync: Delete local %s', uuid);
-                this.model.del(remote, done, this.failure);
+                this.model.del(remote, done, this.failure('deleteLocal'));
 
             } else {
 
@@ -244,9 +269,9 @@ Memento.Sync = Class.create(function () {
                 Mojo.log('Memento.Sync: Overwrite local %s', uuid);
                 this.service.findNote(uuid, null, function (note) {
                     this.model.save(
-                        new Note(note), done, this.failure
+                        new Note(note), done, this.failure('overwriteLocal (inner)')
                     );
-                }.bind(this), this.failure);
+                }.bind(this), this.failure('overwriteLocal'));
 
             }
 

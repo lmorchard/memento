@@ -6,7 +6,7 @@
  * @todo refactor this into a general table row mapper
  */
 /*jslint laxbreak: true */
-/*global Mojo, Memento, Class, NotesModel, Chain, $H, Note, NotesModel, NoteTombstonesModel */
+/*global Mojo, Memento, Class, NotesModel, Chain, $H, Note, NotesModel, NoteTombstone, NoteTombstonesModel */
 Note = Class.create(Memento.DBObject, /** @lends NoteTombstone# */{
 
     /** List of known properties */
@@ -55,7 +55,6 @@ NotesModel =  Class.create(Memento.DBModel, /** @lends NotesModel# */{
     table_name: 'notes',
     
     table_schema: [
-        //"DROP TABLE IF EXISTS 'notes'; ",
         "CREATE TABLE IF NOT EXISTS 'notes' (",
         "   'id' INTEGER PRIMARY KEY AUTOINCREMENT,",
         "   'uuid' TEXT NOT NULL UNIQUE ON CONFLICT REPLACE,",
@@ -179,7 +178,9 @@ NotesModel =  Class.create(Memento.DBModel, /** @lends NotesModel# */{
                 function(t, r) { 
                     // Pair every note deletion with a tombstone save.
                     this.tombstones_model.save(
-                        new NoteTombstone(note),
+                        new NoteTombstone({
+                            uuid: note.uuid, etag: note.etag
+                        }),
                         on_success, on_fail
                     );
                 }.bind(this), 

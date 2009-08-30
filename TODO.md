@@ -1,5 +1,7 @@
 ## App-specific
 
+* Normalize API between NotesModel and Memento.Service
+
 * make table creation check happen once per app launch
 * no sync on empty note
 * sync since with tombstones for deletes.

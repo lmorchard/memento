@@ -77,6 +77,11 @@ NoteAssistant.prototype = (function () {
 
             } else {
 
+                if (Memento.prefs.sync_notifications) {
+                    Mojo.Controller.getAppController().showBanner(
+                        { messageText: "Saving note to web" }, {}, null
+                    );
+                }
                 Memento.notes_service.saveNote(
                     this.note, force_overwrite, 
                     function(note, resp) { 
@@ -86,6 +91,11 @@ NoteAssistant.prototype = (function () {
                             this.note, function(note) { }
                         );
                         Memento.home_assistant.updateList();
+                        if (Memento.prefs.sync_notifications) {
+                            Mojo.Controller.getAppController().showBanner(
+                                { messageText: "Note saved to web" }, {}, null
+                            );
+                        }
                     }.bind(this),
                     this.handleWebSaveProblem.bind(this)
                 );

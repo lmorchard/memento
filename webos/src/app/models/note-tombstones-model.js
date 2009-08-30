@@ -47,7 +47,6 @@ NoteTombstonesModel = (function () {
         table_name: 'tombstones',
         
         table_schema: [
-            //"DROP TABLE IF EXISTS 'tombstones'; ",
             "CREATE TABLE IF NOT EXISTS 'tombstones' (",
             "   'id' INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,",
             "   'uuid' TEXT NOT NULL UNIQUE ON CONFLICT REPLACE,",

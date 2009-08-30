@@ -4,7 +4,7 @@
  * @version 0.1
  */
 /*jslint laxbreak: true */
-/*global Mojo, NotesModel */
+/*global Memento, NotesModel, Note, Mojo, $L, $H, SimpleDateFormat */
 var Memento = (function () {
     
     /** @lends Memento */
@@ -14,6 +14,7 @@ var Memento = (function () {
             loaded: true,
             sync_url: 'http://dev.memento.decafbad.com/',
             sync_enabled: true,
+            sync_notifications: true,
             sync_on_start: true,
             sync_on_open: true,
             sync_on_save: true,
@@ -34,19 +35,10 @@ var Memento = (function () {
          */
         init: function (launch_params) {
 
-            this.prefs_cookie = new Mojo.Model.Cookie('memento_preferences');
-            if (!this.prefs_cookie.get() || !this.prefs_cookie.get().loaded) {
-                this.prefs_cookie.put(this.default_prefs);
-            }
-            this.prefs = this.prefs_cookie.get();
-
-            this.notes_model = new NotesModel();
-            this.notes_service = new Memento.Service({
-                service_url: this.prefs.sync_url
-            });
-            this.notes_sync = new Memento.Sync(
-                this.notes_model, this.notes_service
-            );
+            this.refreshPrefs();
+            this.initModel();
+            this.initService();
+            this.initSync();
 
             var fw_config = Mojo.Environment.frameworkConfiguration;
             this.tests_enabled =
@@ -66,6 +58,32 @@ var Memento = (function () {
             };
 
             return this;
+        },
+
+        refreshPrefs: function () {
+            this.prefs_cookie = new Mojo.Model.Cookie('memento_preferences');
+            if (!this.prefs_cookie.get() || !this.prefs_cookie.get().loaded) {
+                this.prefs_cookie.put(this.default_prefs);
+            }
+            this.prefs = this.prefs_cookie.get();
+        },
+
+        initModel: function () {
+            this.notes_model = new NotesModel(
+                null, function() {}, function() {}
+            );
+        },
+
+        initService: function () {
+            this.notes_service = new Memento.Service({
+                service_url: this.prefs.sync_url
+            });
+        },
+
+        initSync: function () {
+            this.notes_sync = new Memento.Sync(
+                this.notes_model, this.notes_service
+            );
         },
 
         /**

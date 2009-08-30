@@ -13,113 +13,7 @@ function MementoSyncTests(tickleFunction) {
 MementoSyncTests.timeoutInterval = 5000;
 
 MementoSyncTests.prototype = function() {
-
-    // {{{ Test data
     
-    var test_service_url =
-        'http://tester:tester@dev.memento.decafbad.com/profiles/tester/';
-
-    var today      = new Date();
-    var yesterday  = new Date( today.getTime() - (1000 * 60 * 60 * 24) );
-    var tomorrow   = new Date( today.getTime() + (1000 * 60 * 60 * 24) );
-
-    var later_time = new Date( today.getTime() + (1000*60*60) ).toISO8601String();
-
-    var day = function(base, time) {
-        var parts    = time.split(':'), part,
-            offset   = (parts[0]*60*60) + (parts[1]*60) + parts[2] * 1000,
-            new_time = new Date( base.getTime() + offset ),
-            str      = new_time.toISO8601String().replace('Z', '+00:00');
-        return str;
-    };
-    var day_1 = function (t) { return day(yesterday, t); };
-    var day_2 = function (t) { return day(tomorrow, t); };
-
-    var note_map = function (data) {
-        var note = {};
-        ['uuid', 'name', 'text', 'created', 'modified', 'etag']
-            .each(function (name, idx) {
-                if (typeof data[idx] != 'undefined') {
-                    note[name] = data[idx];
-                }
-            });
-        return note;
-    };
-
-    var test_service_data = [
-        // Match older than model
-        [ "a-001", "alpha",    "alpha (r)",    day_1("00:00:20"), day_1("00:30:00") ],
-        // Match newer than model
-        [ "b-001", "beta",     "beta (r)",     day_1("01:00:20"), day_1("01:30:00") ],
-        // Same everything.
-        [ "d-001", "delta",    "delta (*)",    day_1("02:00:20"), day_1("02:30:00") ],
-        // Unique to service
-        [ "e-001", "eta",      "eta (r)",      day_1("03:00:20"), day_1("03:30:00") ],
-        // Deleted on service.
-        [ "del-r", "delete r", "delete r (r)", day_1("04:00:20"), day_1("04:30:00") ],
-        // Deleted on model.
-        [ "del-l", "delete l", "delete l (l)", day_1("05:00:20"), day_1("05:30:00") ]
-    ].map(note_map);
-
-    var test_model_data = [
-        // Match newer than service
-        [ "a-001", "alpha",    "alpha (l)",    day_1("00:00:20"), day_1("00:45:00") ],
-        // Match older than service.
-        [ "b-001", "beta",     "beta (l)",     day_1("01:00:20"), day_1("01:15:00") ],
-        // Same everything.
-        [ "d-001", "delta",    "delta (*)",    day_1("02:00:20"), day_1("02:30:00") ],
-        // Unique to model
-        [ "g-001", "gamma",    "gamma (l)",    day_1("03:00:20"), day_1("03:30:00") ],
-        // Deleted on service
-        [ "del-r", "delete r", "delete r (r)", day_1("04:00:20"), day_1("04:30:00") ],
-        // Deleted on model.
-        [ "del-l", "delete l", "delete l (l)", day_1("05:00:20"), day_1("05:30:00") ]
-    ].map(note_map);
-
-    var expected_data = [
-        [ "a-001", "alpha",    "alpha (l)",    day_1("00:00:20"), day_1("00:45:00") ],
-        [ "b-001", "beta",     "beta (r)",     day_1("01:00:20"), day_1("01:30:00") ],
-        [ "d-001", "delta",    "delta (*)",    day_1("02:00:20"), day_1("02:30:00") ],
-        [ "e-001", "eta",      "eta (r)",      day_1("03:00:20"), day_1("03:30:00") ],
-        [ "g-001", "gamma",    "gamma (l)",    day_1("03:00:20"), day_1("03:30:00") ]
-    ].map(note_map);
-
-    var test_service_data_later = [
-        // Service update.
-        [ "a-001", "alpha",    "alpha (r)",    day_2("02:00:20"), day_2("02:45:00") ],
-        // Service new.
-        [ "t-001", "theta",    "theta (r)",    day_2("03:00:20"), day_2("03:45:00") ],
-        // Conflict update, model newer but service etag changed
-        [ "e-001", "eta",      "eta (r)",      day_2("04:00:20"), day_2("04:30:00") ]
-    ].map(note_map);
-
-    var test_model_data_later = [
-        // Model update.
-        [ "b-001", "beta",     "beta (l)",     day_2("01:00:20"), day_2("01:30:00") ],
-        // Model New.
-        [ "p-001", "phi",      "phi (l)",      day_2("03:00:20"), day_2("03:30:00") ],
-        // Conflict update, model newer but service etag changed
-        [ "e-001", "eta",      "eta (l)",      day_2("05:00:20"), day_2("05:30:00") ]
-    ].map(note_map);
-
-    var expected_data_later = [
-        [ "a-001",   "alpha",             "alpha (r)", day_2("02:00:20"), day_2("02:45:00") ],
-        [ "b-001",   "beta",              "beta (l)",  day_2("01:00:20"), day_2("01:30:00") ],
-        [ "d-001",   "delta",             "delta (*)", day_1("02:00:20"), day_1("02:30:00") ],
-        [ "e-001-l", "eta (local copy)",  "eta (l)",   day_2("05:00:20"), day_2("05:30:00") ],
-        [ "e-001-r", "eta (remote copy)", "eta (r)",   day_2("04:00:20"), day_2("04:30:00") ],
-        [ "g-001",   "gamma",             "gamma (l)", day_1("03:00:20"), day_1("03:30:00") ],
-        [ "p-001",   "phi",               "phi (l)",   day_2("03:00:20"), day_2("03:30:00") ],
-        [ "t-001",   "theta",             "theta (r)", day_2("03:00:20"), day_2("03:45:00") ]
-    ].map(note_map);
-
-    // }}}
-
-    var uuid_cmp = function(a,b) {
-        var av = a.uuid, bv = b.uuid;
-        return (av<bv) ? -1 : ( (av>bv) ? 1 : 0 );
-    };
-
     return /** @lends MementoSyncTests */ {
 
         /**
@@ -133,6 +27,112 @@ MementoSyncTests.prototype = function() {
          */
         initialize: function (tickleFunction) {
             this.tickleFunction = tickleFunction;
+
+            this.test_service_url =
+                'http://tester:tester@dev.memento.decafbad.com/profiles/tester/';
+
+            // Since tombstone timestamps are automatic, set up some times
+            // bracketing the current time in order to accomodate them.
+            var today       = new Date();
+            var yesterday   = new Date( today.getTime() - (1000 * 60 * 60 * 24) );
+            var tomorrow    = new Date( today.getTime() + (1000 * 60 * 60 * 24) );
+
+            this.later_time = new Date( today.getTime() - (1000 * 60 * 1) ).toISO8601String();
+
+            // Shorthand date formatting for test data definition.
+            var day = function(base, time) {
+                var parts    = time.split(':'), part,
+                    offset   = ( (parts[0]*60*60*1000) + (parts[1]*60*1000) + (parts[2]*1000) ),
+                    new_time = new Date( base.getTime() + offset ),
+                    str      = new_time.toISO8601String().replace('Z', '+00:00');
+                return str;
+            };
+            var day_1 = function (t) { return day(yesterday, t); };
+            var day_2 = function (t) { return day(tomorrow, t); };
+
+            // Shorthand note item construction for test data definition.
+            var note_map = function (data) {
+                var note = {};
+                ['uuid', 'name', 'text', 'created', 'modified', 'etag', 'deleteme']
+                    .each(function (name, idx) {
+                        if (typeof data[idx] != 'undefined') {
+                            note[name] = data[idx];
+                        }
+                    });
+                return note;
+            };
+
+            this.test_service_data = [];
+            this.test_model_data   = [];
+            this.expected_data     = [];
+
+            this.test_service_data.push([
+                // Match older than model
+                [ "a-001", "alpha",    "alpha (r)",    day_1("00:00:20"), day_1("00:30:00") ],
+                // Match newer than model
+                [ "b-001", "beta",     "beta (r)",     day_1("01:00:20"), day_1("01:30:00") ],
+                // Same everything.
+                [ "d-001", "delta",    "delta (*)",    day_1("02:00:20"), day_1("02:30:00") ],
+                // Unique to service
+                [ "e-001", "eta",      "eta (r)",      day_1("03:00:20"), day_1("03:30:00") ]
+            ].map(note_map));
+
+            this.test_model_data.push([
+                // Match newer than service
+                [ "a-001", "alpha",    "alpha (l)",    day_1("00:00:20"), day_1("00:45:00") ],
+                // Match older than service.
+                [ "b-001", "beta",     "beta (l)",     day_1("01:00:20"), day_1("01:15:00") ],
+                // Same everything.
+                [ "d-001", "delta",    "delta (*)",    day_1("02:00:20"), day_1("02:30:00") ],
+                // Unique to model
+                [ "g-001", "gamma",    "gamma (l)",    day_1("03:00:20"), day_1("03:30:00") ]
+            ].map(note_map));
+
+            this.expected_data.push([
+                [ "a-001", "alpha",    "alpha (l)",    day_1("00:00:20"), day_1("00:45:00") ],
+                [ "b-001", "beta",     "beta (r)",     day_1("01:00:20"), day_1("01:30:00") ],
+                [ "d-001", "delta",    "delta (*)",    day_1("02:00:20"), day_1("02:30:00") ],
+                [ "e-001", "eta",      "eta (r)",      day_1("03:00:20"), day_1("03:30:00") ],
+                [ "g-001", "gamma",    "gamma (l)",    day_1("03:00:20"), day_1("03:30:00") ]
+            ].map(note_map));
+
+            this.test_service_data.push([
+                // Service update.
+                [ "a-001", "alpha",    "alpha (r)",    day_2("02:00:20"), day_2("02:45:00") ],
+                // Service new.
+                [ "t-001", "theta",    "theta (r)",    day_2("03:00:20"), day_2("03:45:00") ],
+                // Conflict update, model newer but service etag changed
+                [ "e-001", "eta",      "eta (r)",      day_2("04:00:20"), day_2("04:30:00") ],
+                // Deleted on service.
+                [ "del-r", "delete r", "delete r (r)", day_1("04:00:20"), day_1("04:30:00"), null, true ],
+                // Deleted on model.
+                [ "del-l", "delete l", "delete l (l)", day_1("05:00:20"), day_1("05:30:00") ]
+            ].map(note_map));
+
+            this.test_model_data.push([
+                // Model update.
+                [ "b-001", "beta",     "beta (l)",     day_2("01:00:20"), day_2("01:30:00") ],
+                // Model New.
+                [ "p-001", "phi",      "phi (l)",      day_2("03:00:20"), day_2("03:30:00") ],
+                // Conflict update, model newer but service etag changed
+                [ "e-001", "eta",      "eta (l)",      day_2("05:00:20"), day_2("05:30:00") ],
+                // Deleted on service
+                [ "del-r", "delete r", "delete r (r)", day_1("04:00:20"), day_1("04:30:00") ],
+                // Deleted on model.
+                [ "del-l", "delete l", "delete l (l)", day_1("05:00:20"), day_1("05:30:00"), null, true ]
+            ].map(note_map));
+
+            this.expected_data.push([
+                [ "a-001",   "alpha",        "alpha (r)", day_2("02:00:20"), day_2("02:45:00") ],
+                [ "b-001",   "beta",         "beta (l)",  day_2("01:00:20"), day_2("01:30:00") ],
+                [ "d-001",   "delta",        "delta (*)", day_1("02:00:20"), day_1("02:30:00") ],
+                [ "e-001-l", "eta (l copy)", "eta (l)",   day_2("05:00:20"), day_2("05:30:00") ],
+                [ "e-001-r", "eta (r copy)", "eta (r)",   day_2("04:00:20"), day_2("04:30:00") ],
+                [ "g-001",   "gamma",        "gamma (l)", day_1("03:00:20"), day_1("03:30:00") ],
+                [ "p-001",   "phi",          "phi (l)",   day_2("03:00:20"), day_2("03:30:00") ],
+                [ "t-001",   "theta",        "theta (r)", day_2("03:00:20"), day_2("03:45:00") ]
+            ].map(note_map));
+
         },
 
         /**
@@ -140,77 +140,104 @@ MementoSyncTests.prototype = function() {
          */
         testCompleteSyncProcess: function(recordResults) {
             var chain = new Chain([
-                '_setupModel',
-                '_setupService',
+                '_resetModelAndService',
+                this._loadTestData(0),
                 '_performAndVerifyFullSync',
-                '_makeLaterModelChanges',
-                '_makeLaterServiceChanges',
+                this._loadTestData(1),
                 '_performAndVerifySyncSince',
                 function() { recordResults(Mojo.Test.passed); }
             ], this).start();
         },
 
         /**
+         * Reset the model, deleting all data
+         */
+        _resetModelAndService: function (main_done) {
+            var chain = new Chain([
+                function (done) {
+                    this.model = new NotesModel('Memento_Notes_Test', done);
+                },
+                function (done) {
+                    this.model.reset(done);
+                },
+                function (done) {
+                    this.service = new Memento.Service({
+                        service_url: this.test_service_url
+                    });
+                    this.service.deleteAllNotes(done);
+                },
+                main_done
+            ], this).start();
+        },
+
+        /**
+         * Generate a data loading function for the given index of test data.
+         */
+        _loadTestData: function(idx) {
+            return function (main_done) {
+                var chain = new Chain([
+                    function (done) { 
+                        this._loadModelData(this.test_model_data[idx], done); 
+                    },
+                    function (done) { 
+                        this._loadServiceData(this.test_service_data[idx], done); 
+                    },
+                    main_done
+                ], this).start();
+            };
+        },
+
+        /**
          * Set up the model by clearing it and loading it up with test data.
          */
-        _setupModel: function(done) {
-            this.model = new NotesModel('Memento_Notes_Test');
-
-            var to_delete = null,
+        _loadModelData: function(data, main_done) {
+            var to_delete = [],
                 chain = new Chain([], this);
-
-            chain.push(function (sub_done) {
-                this.model.reset(sub_done);
-            });
             
-            test_model_data.each(function (item) {
+            data.each(function (item) {
                 var note = new Note(item);
-                if ('del-l' == note.uuid) { to_delete = note; }
-                chain.push(function (sub_done) {
-                    this.model.save(note, sub_done);
+                if (item.deleteme) { to_delete.push(note); }
+                Mojo.log("SETUP MODEL %j", item);
+                chain.push(function (done) {
+                    this.model.save(note, done);
                 });
             }.bind(this));
 
-            if (to_delete) {
-                chain.push(function (sub_done) {
-                    this.model.del(to_delete, sub_done);
+            to_delete.each(function (note) {
+                chain.push(function (done) {
+                    Mojo.log("DELETING MODEL %s", note.uuid);
+                    this.model.del(note, done);
                 });
-            }
+            });
             
-            chain.push(done).start();
+            chain.push(main_done).start();
         },
 
         /**
          * Set up the service by clearing it and loading it up with test data.
          */
-        _setupService: function (done) {
-            this.service = new Memento.Service({
-                service_url: test_service_url
-            });
-
-            var to_delete = null,
+        _loadServiceData: function (data, main_done) {
+            var to_delete = [],
                 chain = new Chain([], this);
 
-            chain.push(function (sub_done) {
-                this.service.deleteAllNotes(sub_done);
-            });
-
-            test_service_data.each(function (item) {
-                if ('del-r' === item.uuid) { to_delete = item; }
-                chain.push(function (sub_done) {
-                    this.service.saveNote(item, true, sub_done);
+            data.each(function (item) {
+                if (item.deleteme) { to_delete.push(item); }
+                Mojo.log("SETUP SERVICE %j", item);
+                chain.push(function (done) {
+                    this.service.saveNote(item, true, done);
                 });
             }.bind(this));
 
-            if (to_delete) {
-                chain.push(function (sub_done) {
+            to_delete.each(function (note) {
+                chain.push(function (done) {
+                    Mojo.log("DELETING SERVICE %s", note.uuid);
                     this.service.deleteNote(
-                        to_delete.uuid, null, true, sub_done
+                        note.uuid, null, true, done
                     );
                 });
-            }
+            });
 
-            chain.push(done).start();
+            chain.push(main_done).start();
         },
 
         /**
@@ -220,7 +247,7 @@ MementoSyncTests.prototype = function() {
 
             this.sync = new Memento.Sync(this.model, this.service);
             this.last_sync = null;
-            this.expected_data = expected_data;
+            this.curr_expected_data = this.expected_data[0];
 
             var chain = new Chain([
                 '_startSync',
@@ -238,8 +265,8 @@ MementoSyncTests.prototype = function() {
         _performAndVerifySyncSince: function (done) {
 
             this.sync = new Memento.Sync(this.model, this.service);
-            this.last_sync = later_time;
-            this.expected_data = expected_data_later;
+            this.last_sync = this.later_time;
+            this.curr_expected_data = this.expected_data[1];
 
             var chain = new Chain([
                 '_startSync',
@@ -266,9 +293,9 @@ MementoSyncTests.prototype = function() {
          */
         _handleConflict: function (uuid, local, remote, cb) {
             local.uuid  = local.uuid  + '-l';
-            local.name  = local.name  + ' (local copy)';
+            local.name  = local.name  + ' (l copy)';
             remote.uuid = remote.uuid + '-r';
-            remote.name = remote.name + ' (remote copy)';
+            remote.name = remote.name + ' (r copy)';
             
             return cb(local, remote);
         },
@@ -305,7 +332,7 @@ MementoSyncTests.prototype = function() {
                     // accumlated data against expectations.
                     sub_chain.push(function(sub_sub_done) {
                         Mojo.log('Verify local data');
-                        this._assertItems(this.expected_data, result_notes);
+                        this._assertItems(this.curr_expected_data, result_notes);
                         Mojo.log('Local data verified');
                         sub_sub_done();
                     });
@@ -348,7 +375,7 @@ MementoSyncTests.prototype = function() {
                     // accumlated data against expectations.
                     sub_chain.push(function(sub_sub_done) {
                         Mojo.log('Verify remote data');
-                        this._assertItems(this.expected_data, result_notes);
+                        this._assertItems(this.curr_expected_data, result_notes);
                         Mojo.log('Remote data verified');
                         sub_sub_done();
                     });
@@ -420,13 +447,21 @@ MementoSyncTests.prototype = function() {
         },
 
         /**
+         * Comparison function for sorting by item UUIDs
+         */
+        _uuidCmp: function(a,b) {
+            var av = a.uuid, bv = b.uuid;
+            return (av<bv) ? -1 : ( (av>bv) ? 1 : 0 );
+        },
+
+        /**
          * Given expected and result data, assert equality of the list and
          * properties of each individual item.
          */
         _assertItems: function(expected, result, message) {
 
-            expected.sort(uuid_cmp);
-            result.sort(uuid_cmp);
+            expected.sort(this._uuidCmp);
+            result.sort(this._uuidCmp);
 
             expected.each(function(item, idx) { 
                 Mojo.log('EXPECTED %s: %j', idx, item);
@@ -466,45 +501,6 @@ MementoSyncTests.prototype = function() {
                     'Result note should have non-empty etag after sync');
 
             }.bind(this));
-        },
-
-        /**
-         * Apply second batch of changes to the model.
-         */
-        _makeLaterModelChanges: function (done) {
-            var chain = new Chain([], this);
-
-            test_model_data_later.each(function (item) {
-                chain.push(function (sub_done) {
-                    Mojo.log("LATER MODEL %j", item);
-                    var note = new Note(item);
-                    this.model.save(
-                        note, sub_done,
-                        function() { throw "model save failed!"; }
-                    );
-                });
-            }.bind(this));
-
-            chain.push(done).start();
-        },
-
-        /**
-         * Apply second batch of changes to the service.
-         */
-        _makeLaterServiceChanges: function (done) {
-            var chain = new Chain([], this);
-            
-            test_service_data_later.each(function(item) {
-                chain.push(function(sub_done) {
-                    Mojo.log("LATER SERVICE %j", item);
-                    this.service.saveNote(
-                        item, true, sub_done,
-                        function() { throw "service save failed!"; }
-                    );
-                });
-            }.bind(this));
-
-            chain.push(done).start();
         },
 
         EOF:null

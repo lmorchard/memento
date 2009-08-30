@@ -33,6 +33,12 @@
                             <div class="palm-list">
                                 <div class="palm-row first">
                                     <div class="palm-row-wrapper">   
+                                        <div x-mojo-element="ToggleButton" id="sync_notifications"></div>
+                                        <div class="title" x-mojo-loc=''>Show notifications</div>  
+                                    </div>
+                                </div>
+                                <div class="palm-row">
+                                    <div class="palm-row-wrapper">   
                                         <div x-mojo-element="ToggleButton" id="sync_on_start"></div>
                                         <div class="title" x-mojo-loc=''>On launch</div>  
                                     </div>
@@ -49,10 +55,23 @@
                                         <div class="title" x-mojo-loc=''>On note save</div>
                                     </div>
                                 </div>
-                                <div class="palm-row last">
+                                <div class="palm-row">
                                     <div class="palm-row-wrapper">                                             
                                         <div x-mojo-element="ToggleButton" id="sync_on_delete"></div>
                                         <div class="title" x-mojo-loc=''>On note delete</div>
+                                    </div>
+                                </div>
+                                <div class="palm-row last">
+                                    <div class="palm-row-wrapper">
+                                        <div x-mojo-element="Button" id="sync_reset"></div>
+                                        <p>This button will trigger a full web
+                                            sync at the next attempt.</p>
+                                        <p>
+                                            You should only need to use this if
+                                            you've switched service URLs, or
+                                            notice sync missing older
+                                            notes.
+                                        </p>
                                     </div>
                                 </div>
                             </div>

@@ -76,6 +76,20 @@ HomeAssistant.prototype = (function () {
         },
 
         /**
+         * On scene activation, update the notes list.
+         */
+        activate: function (event) {
+            this.performSync();
+        },
+
+        /**
+         * On scene deactivation, do...
+         */
+        deactivate: function (event) {
+            this.updateList();
+        },
+
+        /**
          * Convert a date to a human-friendly string.
          */
         formatDate: function(date, model) {
@@ -120,6 +134,11 @@ HomeAssistant.prototype = (function () {
                             // If the note was updated, use the remote one.
                             Mojo.log("Note changed on remote");
                             note = remote_note;
+                            if (Memento.prefs.sync_notifications) {
+                                Mojo.Controller.getAppController().showBanner(
+                                    { messageText: "Note updated from web" }, {}, null
+                                );
+                            }
                         }
                         return this._pushNoteScene(note);
                     }.bind(this),
@@ -160,9 +179,19 @@ HomeAssistant.prototype = (function () {
                         Memento.notes_service.deleteNote(
                             note.uuid, note.etag, false,
                             function () {
+                                if (Memento.prefs.sync_notifications) {
+                                    Mojo.Controller.getAppController().showBanner(
+                                        { messageText: "Note deleted from web" }, {}, null
+                                    );
+                                }
                                 Mojo.log("Deleted %s from remote", note.uuid);
                             },
                             function () {
+                                if (Memento.prefs.sync_notifications) {
+                                    Mojo.Controller.getAppController().showBanner(
+                                        { messageText: "Failed to delete note from web :(" }, {}, null
+                                    );
+                                }
                                 Mojo.Log.error("Error deleting remote %s", note.uuid);
                             }
                         );
@@ -222,20 +251,59 @@ HomeAssistant.prototype = (function () {
          * Perform notes sync.
          */
         performSync: function() {
+
             if (!Memento.prefs.sync_enabled) {
+                
                 this.updateList();
+
             } else {
+                
+                var last_sync_cookie = 
+                    new Mojo.Model.Cookie('memento_last_sync');
+
+                Mojo.log("Starting sync...");
+                if (Memento.prefs.sync_notifications) {
+                    Mojo.Controller.getAppController().showBanner(
+                        { messageText: "Starting web sync..." }, {}, null
+                    );
+                }
+
+                var last_sync = last_sync_cookie.get();
+
                 Memento.notes_sync.startSync(
-                    function () {
-                        // TODO: Handle conflict
-                    },
+
+                    last_sync,
+
+                    function (uuid, local, remote, cb) {
+                        // TODO: Wire this up as a dialog choice.
+                        local.uuid  = local.uuid  + '-l';
+                        local.name  = local.name  + ' (local copy)';
+                        remote.uuid = remote.uuid + '-r';
+                        remote.name = remote.name + ' (remote copy)';
+                        
+                        cb(local, remote);
+                    }.bind(this),
+                    
                     function() {
                         Mojo.log('Notes sync completed');
+                        last_sync_cookie.put(
+                            (new Date()).toISO8601String()
+                        );
                         this.updateList();
+                        if (Memento.prefs.sync_notifications) {
+                            Mojo.Controller.getAppController().showBanner(
+                                { messageText: "Web sync complete" }, {}, null
+                            );
+                        }
                     }.bind(this),
-                    function(json) {
-                        Mojo.log('Notes sync FAILED');
+
+                    function(reason, args) { 
+                        Mojo.log('Sync FAILED %j %j', reason, args); 
+                        Mojo.Controller.getAppController().showBanner(
+                            { messageText: "Web sync FAILED " + reason }, {}, null
+                        );
                     }.bind(this)
+                
                 );
             }
         },
@@ -297,26 +365,6 @@ HomeAssistant.prototype = (function () {
         handleCommandNewNote: function(event) {
             var new_note = new Note();
             this.openNote(new_note);
-        },
-
-        /**
-         * On scene activation, update the notes list.
-         */
-        activate: function (event) {
-            this.performSync();
-        },
-
-        /**
-         * On scene deactivation, do...
-         */
-        deactivate: function (event) {
-            this.updateList();
-        },
-
-        /**
-         * On scene cleanup, do...
-         */
-        cleanup: function (event) {
         }
 
     };
