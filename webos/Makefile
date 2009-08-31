@@ -23,7 +23,7 @@ IPK=bin/$(APPID)_$(VERSION)_all.ipk
 ifeq ($(TARGET),device)
 	NOVACOM_ID=$(shell novacom -l | grep castle-linux | head -1 | cut -d' ' -f2)
 	DEVICE=usb
-	UPDATE_TARGETS=remove restart launch
+	UPDATE_TARGETS=remove launch
 	TESTS_TARGETS=launch-tests
 else
 	NOVACOM_ID=$(shell novacom -l | grep emulator | head -1 | cut -d' ' -f2)
