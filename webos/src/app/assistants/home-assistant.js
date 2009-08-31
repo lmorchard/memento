@@ -42,17 +42,6 @@ HomeAssistant.prototype = (function () {
                 "notes-list", list_attrs, this.list_model
             );
 
-            // Connect up the tap and delete events.
-            Memento.setupListeners([
-                ['notes-list', Mojo.Event.listTap, function(ev) {
-                    this.openNoteByUUID(ev.item.uuid);
-                }], 
-                ['notes-list', Mojo.Event.listDelete, function(ev) {
-                    this.deleteNoteByUUID(ev.item.uuid);
-                }],
-                ['sort-selector', Mojo.Event.tap, this.showSortMenu ]
-            ], this);
-
             // Set up the new note command button.
             var command_menu_model = {items: [
                 { label: $L('+ New ...'), icon: 'new-note', command:'NewNote' }
@@ -73,17 +62,21 @@ HomeAssistant.prototype = (function () {
         },
 
         /**
-         * On scene cleanup, clear all listeners.
-         */
-        cleanup: function () {
-            Memento.clearListeners(this);
-        },
-
-        /**
          * On scene activation, update the notes list.
          */
         activate: function () {
             this.performSync();
+
+            // Connect up the tap and delete events.
+            Memento.setupListeners([
+                ['notes-list', Mojo.Event.listTap, function(ev) {
+                    this.openNoteByUUID(ev.item.uuid);
+                }], 
+                ['notes-list', Mojo.Event.listDelete, function(ev) {
+                    this.deleteNoteByUUID(ev.item.uuid);
+                }],
+                ['sort-selector', Mojo.Event.tap, this.showSortMenu ]
+            ], this);
         },
 
         /**
@@ -91,6 +84,13 @@ HomeAssistant.prototype = (function () {
          */
         deactivate: function () {
             this.updateList();
+            Memento.clearListeners(this);
+        },
+
+        /**
+         * On scene cleanup, clear all listeners.
+         */
+        cleanup: function () {
         },
 
         /**

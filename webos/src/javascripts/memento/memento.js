@@ -10,6 +10,8 @@ var Memento = (function () {
     /** @lends Memento */
     return {
 
+        log_lines: [],
+
         default_prefs: {
             loaded: true,
             sync_url: 'http://dev.memento.decafbad.com/',
@@ -42,10 +44,10 @@ var Memento = (function () {
 
             var fw_config = Mojo.Environment.frameworkConfiguration;
             this.tests_enabled =
-                ('true' === fw_config.testsEnabled) || 
+                fw_config.testsEnabled || 
                 launch_params.testsEnabled;
             this.run_tests_at_launch =
-                ('true' === fw_config.runTestsAtLaunch) ||
+                fw_config.runTestsAtLaunch ||
                 launch_params.runTestsAtLaunch;
             
             if (this.tests_enabled) {
@@ -121,6 +123,10 @@ var Memento = (function () {
                             .pushScene("preferences", this);
                         break;
 
+                    case 'AppDev':
+                        Mojo.Controller.stageController.pushScene("dev", this);
+                        break;
+
                     case 'AppTests':
                         Mojo.Test.pushTestScene(this.controller, { runAll: true });
                         break;
@@ -157,6 +163,9 @@ var Memento = (function () {
             this.app_menu_items.push(
                 { label: "Run Tests...", command: 'AppTests' }
             );
+            this.app_menu_items.push(
+                { label: "Dev Scene...", command: 'AppDev' }
+            );
         },
 
         /**
@@ -166,7 +175,8 @@ var Memento = (function () {
         setupListeners: function (listeners, that) {
             that.listeners = listeners.map(function (listener) {
                 var new_listener = [
-                    this.controller.get(listener[0]),
+                    typeof listener[0] == 'string' ?
+                        this.controller.get(listener[0]) : listener[0],
                     listener[1],
                     listener[2].bind(this)
                 ];

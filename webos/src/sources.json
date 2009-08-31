@@ -1,34 +1,31 @@
 [
-
-    {"source": "vendor\/Math.uuid.js"}, 
-    {"source": "vendor\/simpledateformat.js"}, 
-    {"source": "vendor\/date-iso8601.js"}, 
-
-    {"source": "javascripts\/chain.js"}, 
-    {"source": "javascripts\/ajax-json-request.js"}, 
-
-    {"source": "javascripts\/memento\/memento.js"}, 
-    {"source": "javascripts\/memento\/dbmodel.js"}, 
-    {"source": "javascripts\/memento\/service.js"}, 
-
-    {"source": "app\/models\/notes-model.js"}, 
-    {"source": "app\/models\/note-tombstones-model.js"}, 
-
-    {"source": "javascripts\/memento\/sync.js"}, 
-
+    {"source": "vendor\/Math.uuid.js"},
+    {"source": "vendor\/simpledateformat.js"},
+    {"source": "vendor\/date-iso8601.js"},
+    {"source": "javascripts\/chain.js"},
+    {"source": "javascripts\/ajax-json-request.js"},
+    {"source": "javascripts\/memento\/memento.js"},
+    {"source": "javascripts\/memento\/dbmodel.js"},
+    {"source": "javascripts\/memento\/service.js"},
+    {"source": "app\/models\/notes-model.js"},
+    {"source": "app\/models\/note-tombstones-model.js"},
+    {"source": "javascripts\/memento\/sync.js"},
     {"source": "app\/assistants\/app-assistant.js"},
     {"source": "app\/assistants\/stage-assistant.js"},
-
     {
-        "scenes": "home",
-        "source": "app\/assistants\/home-assistant.js"
+        "source": "app\/assistants\/home-assistant.js",
+        "scenes": "home"
     },
     {
-        "scenes": "note",
-        "source": "app\/assistants\/note-assistant.js"
+        "source": "app\/assistants\/note-assistant.js",
+        "scenes": "note"
     },
     {
-        "scenes": "preferences",
-        "source": "app\/assistants\/preferences-assistant.js"
+        "source": "app\/assistants\/preferences-assistant.js",
+        "scenes": "preferences"
+    },
+    {
+        "source": "app\/assistants\/dev-assistant.js",
+        "scenes": "dev"
     }
 ]

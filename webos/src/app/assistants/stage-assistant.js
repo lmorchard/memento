@@ -14,12 +14,12 @@ StageAssistant.prototype = (function () {
     return {
 
         setup: function () {
+            this.controller.setWindowOrientation('free');
             if (Memento.run_tests_at_launch) {
                 Mojo.Test.pushTestScene(this.controller, { runAll: true });
             } else {
                 this.controller.pushScene('home');
             }
-            this.controller.setWindowOrientation('free');
         },
 
         handleCommand: Memento.globalHandleCommand

@@ -10,14 +10,26 @@ function NoteAssistant (note) {
 }
 
 NoteAssistant.prototype = (function () {
-
+    
     /** @lends NoteAssistant# */ 
     return {
 
-        setup: function () {
-            var listeners = [];
+        
 
+        setup: function () {
             this.controller.stageController.setWindowOrientation('free');
+
+            this.current_size = 3;
+
+            var listeners = [
+                ['text', 'gesturestart',  this.handleGestureStart],
+                ['text', 'gesturechange', this.handleGestureChange],
+                ['text', 'gestureend',    this.handleGestureEnd],
+                [this.controller.document, 'gesturestart',  this.handleGestureStart],
+                [this.controller.document, 'gesturechange', this.handleGestureChange],
+                [this.controller.document, 'gestureend',    this.handleGestureEnd],
+                [this.controller.document, Mojo.Event.tap,  this.focusText]
+            ];
 
             this.controller.setupWidget(Mojo.Menu.appMenu, 
                 Memento.app_menu.attr, Memento.app_menu.model);
@@ -48,18 +60,29 @@ NoteAssistant.prototype = (function () {
                     this.saveChanges]);
             }, this);
 
-            // TODO: Find a way to translate taps on stage into text focus
-            /*
-            this.controller.get('main').observe(
-                Mojo.Event.tap, this.focusText.bind(this)
-            );
-            */
-
             Memento.setupListeners(listeners, this);
         },
 
         focusText: function(ev) {
             this.controller.get('text').focus();
+        },
+
+        handleGestureStart: function (ev) {
+        },
+
+        handleGestureChange: function (ev) {
+            var size = Math.round(this.current_size * ev.scale);
+            if (size >= 8) size = 8;
+            if (size <= 1) size = 1;
+            this.controller.get('text').className = 'size' + size;
+        },
+
+        handleGestureEnd: function (ev) {
+            var size = Math.round(this.current_size * ev.scale);
+            if (size >= 8) size = 8;
+            if (size <= 1) size = 1;
+            this.current_size = size;
+            this.controller.get('text').className = 'size' + size;
         },
         
         saveChanges: function(force_overwrite) {

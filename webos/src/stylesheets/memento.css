@@ -75,11 +75,57 @@
     padding: 0 10px 0 10px;
     min-height: 400px;
 }
+.note-scene #text textarea {
+    font-size: 20px;
+}
+.note-scene #text.size1,
+.note-scene #text.size1 textarea {
+    font-size: 10px;
+}
+.note-scene #text.size2,
+.note-scene #text.size2 textarea {
+    font-size: 15px;
+}
+.note-scene #text.size3,
+.note-scene #text.size3 textarea {
+    font-size: 20px;
+}
+.note-scene #text.size4,
+.note-scene #text.size4 textarea {
+    font-size: 25px;
+}
+.note-scene #text.size5,
+.note-scene #text.size5 textarea {
+    font-size: 30px;
+}
+.note-scene #text.size6,
+.note-scene #text.size6 textarea {
+    font-size: 35px;
+}
+.note-scene #text.size7,
+.note-scene #text.size7 textarea {
+    font-size: 40px;
+}
+.note-scene #text.size8,
+.note-scene #text.size8 textarea {
+    font-size: 45px;
+}
 
 .preferences-scene #sync_url,
 .preferences-scene #sync_url input {
-   font-size: 85%;
+    font-size: 85%;
 }
 .preferences-scene .palm-list .palm-row p {
-   padding: 0 15px 0 15px;
+    padding: 0 15px 0 15px;
+}
+
+.dev-scene #log-output {
+    font-family: monospace;
+    white-space: pre;
+    font-size: 0.55em;
+    margin: 0.25em 0.75em;
+    padding: 0.75em 0.75em;
+    min-height: 300px;
+    background-color: #000;
+    color: #eee;
 }
