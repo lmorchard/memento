@@ -19,6 +19,7 @@ StageAssistant.prototype = (function () {
             } else {
                 this.controller.pushScene('home');
             }
+            this.controller.setWindowOrientation('free');
         },
 
         handleCommand: Memento.globalHandleCommand

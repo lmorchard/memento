@@ -160,6 +160,12 @@ Memento.Sync = Class.create(function () {
                 return this._overwriteLocal(done, uuid, local, remote);
             }
 
+            if (local.tombstone && remote.tombstone) {
+                // If both are tombstones, nothing needs doing even if there's
+                // technically a conflict.
+                return done();
+            }
+
             var local_modified  = (new Date()).setISO8601(local.modified),
                 remote_modified = (new Date()).setISO8601(remote.modified);
 

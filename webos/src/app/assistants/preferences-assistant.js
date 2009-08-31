@@ -17,10 +17,8 @@ PreferencesAssistant.prototype = (function () {
          * Set up the preferences scene.
          */
         setup: function () {
-
             this.controller.setupWidget(Mojo.Menu.appMenu, 
                 Memento.app_menu.attr, Memento.app_menu.model);
-
             this.controller.setupWidget('sync_url', 
                 {
                     modelProperty: 'sync_url',
@@ -28,38 +26,37 @@ PreferencesAssistant.prototype = (function () {
                 },
                 Memento.prefs
             );
-
-            ['enabled', 'notifications', 'on_start', 'on_open', 
-                    'on_save', 'on_delete', 'on_shutdown']
-                .each(function (name) {
-                    this.controller.setupWidget('sync_' + name, 
-                        { modelProperty: 'sync_' + name },
-                        Memento.prefs
-                    );
-                    this.controller.get('sync_' + name,
-                        Mojo.Event.propertyChange, this.savePrefs.bind(this)
-                    );
-                }, this);
-
             this.controller.setupWidget(
-                'sync_reset', 
-                { label: 'Reset sync' }, { }
+                'sync_reset', { label: 'Reset sync' }, { }
             );
-            this.controller.get('sync_reset').observe(
-               Mojo.Event.tap, this.resetSync.bind(this)
-            );
-
             this.controller.setupWidget('features_drawer',
-                { unstyled: true },
-                { open: Memento.prefs.sync_enabled }
+                { unstyled: true }, { open: Memento.prefs.sync_enabled }
             );
 
-            this.controller.get('sync_enabled').observe(
-                Mojo.Event.propertyChange, function (ev) {
-                    this.controller.get('features_drawer').mojo.toggleState();
-                }.bind(this)
-            );
+            var listeners = [
+                ['sync_enabled', Mojo.Event.propertyChange, 
+                    function (ev) {
+                        this.controller.get('features_drawer')
+                            .mojo.toggleState();
+                    }
+                ],
+                ['sync_url', Mojo.Event.propertyChange, 
+                    function (ev) { this.resetSync(); }
+                ],
+                ['sync_reset', Mojo.Event.tap, this.resetSync]
+            ];
 
+            ['enabled', 'url', 'notifications', 'on_start', 'on_open', 
+                'on_save', 'on_delete'].each(function (name) {
+                this.controller.setupWidget(
+                    'sync_' + name, { modelProperty: 'sync_' + name },
+                    Memento.prefs
+                );
+                listeners.push(['sync_' + name, Mojo.Event.propertyChange,
+                    this.savePrefs]);
+            }, this);
+
+            Memento.setupListeners(listeners, this);
         },
 
         /**
@@ -78,18 +75,11 @@ PreferencesAssistant.prototype = (function () {
          * Save the preferences model.
          */
         savePrefs: function () {
-
-            Mojo.Controller.getAppController().showBanner(
-                { messageText: "Preferences saved" }, {}, null
-            );
-
             var old_prefs = Memento.prefs_cookie.get();
-            
             Memento.prefs_cookie.put(Memento.prefs);
             Memento.refreshPrefs();
             Memento.initService();
             Memento.initSync();
-            this.resetSync();
         },
 
         activate: function (event) {
@@ -101,6 +91,7 @@ PreferencesAssistant.prototype = (function () {
 
         cleanup: function (event) {
             this.savePrefs();
+            Memento.clearListeners(this);
         }
 
     };

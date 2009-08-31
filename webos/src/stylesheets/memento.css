@@ -80,3 +80,6 @@
 .preferences-scene #sync_url input {
    font-size: 85%;
 }
+.preferences-scene .palm-list .palm-row p {
+   padding: 0 15px 0 15px;
+}

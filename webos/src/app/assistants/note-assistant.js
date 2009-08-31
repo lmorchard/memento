@@ -15,6 +15,7 @@ NoteAssistant.prototype = (function () {
     return {
 
         setup: function () {
+            var listeners = [];
 
             this.controller.setupWidget(Mojo.Menu.appMenu, 
                 Memento.app_menu.attr, Memento.app_menu.model);
@@ -41,9 +42,8 @@ NoteAssistant.prototype = (function () {
             );
 
             ['name', 'text'].each(function(name) {
-                this.controller.get(name).observe(
-                    Mojo.Event.propertyChange, this.saveChanges.bind(this)
-                );
+                listeners.push([name, Mojo.Event.propertyChange, 
+                    this.saveChanges]);
             }, this);
 
             // TODO: Find a way to translate taps on stage into text focus
@@ -53,6 +53,7 @@ NoteAssistant.prototype = (function () {
             );
             */
 
+            Memento.setupListeners(listeners, this);
         },
 
         focusText: function(ev) {
@@ -145,7 +146,7 @@ NoteAssistant.prototype = (function () {
         },
 
         cleanup: function (event) {
-            //this.saveChanges();
+            Memento.clearListeners(this);
         }
 
     };

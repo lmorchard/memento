@@ -43,7 +43,7 @@ HomeAssistant.prototype = (function () {
             );
 
             // Connect up the tap and delete events.
-            this.listeners = [
+            Memento.setupListeners([
                 ['notes-list', Mojo.Event.listTap, function(ev) {
                     this.openNoteByUUID(ev.item.uuid);
                 }], 
@@ -51,7 +51,7 @@ HomeAssistant.prototype = (function () {
                     this.deleteNoteByUUID(ev.item.uuid);
                 }],
                 ['sort-selector', Mojo.Event.tap, this.showSortMenu ]
-            ].map(Memento.mapListener, this);
+            ], this);
 
             // Set up the new note command button.
             var command_menu_model = {items: [
@@ -76,7 +76,7 @@ HomeAssistant.prototype = (function () {
          * On scene cleanup, clear all listeners.
          */
         cleanup: function () {
-            Memento.clearListeners(this.listeners);
+            Memento.clearListeners(this);
         },
 
         /**
@@ -275,19 +275,21 @@ HomeAssistant.prototype = (function () {
                 var last_sync = last_sync_cookie.get();
 
                 Memento.notes_sync.startSync(
-
                     last_sync,
-
                     function (uuid, local, remote, cb) {
                         // TODO: Wire this up as a dialog choice.
-                        local.uuid  = local.uuid  + '-l';
-                        local.name  = local.name  + ' (local copy)';
-                        remote.uuid = remote.uuid + '-r';
-                        remote.name = remote.name + ' (remote copy)';
-                        
+                        if (local.tombstone) {
+                            local = remote;
+                        } else if (remote.tombstone) {
+                            remote = local;
+                        } else {
+                            local.uuid  = local.uuid  + '-l';
+                            local.name  = local.name  + ' (local copy)';
+                            remote.uuid = remote.uuid + '-r';
+                            remote.name = remote.name + ' (remote copy)';
+                        }
                         cb(local, remote);
                     }.bind(this),
-                    
                     function() {
                         Mojo.log('Notes sync completed');
                         last_sync_cookie.put(
@@ -300,14 +302,12 @@ HomeAssistant.prototype = (function () {
                             );
                         }
                     }.bind(this),
-
                     function(reason, args) { 
                         Mojo.log('Sync FAILED %j %j', reason, args); 
                         Mojo.Controller.getAppController().showBanner(
                             { messageText: "Web sync FAILED " + reason }, {}, null
                         );
                     }.bind(this)
-                
                 );
             }
         },
@@ -348,6 +348,7 @@ HomeAssistant.prototype = (function () {
 
             var list_widget = this.controller.get('notes-list');
             list_widget.mojo.noticeUpdatedItems(offset, this.list_model.items);
+            list_widget.mojo.setLength(this.list_model.items.length);
         },
 
         /**
