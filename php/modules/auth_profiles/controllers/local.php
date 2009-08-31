@@ -32,4 +32,26 @@ class Local_Controller extends Layout_Controller
             }
         }
     }
+
+    /**
+     * Convert the arguments in the route to name/value parameters.
+     *
+     * @return array Parameters based on current route.
+     */
+    public function getRouteParams($defaults=null, $wildcard='path')
+    {
+        $args = Router::$arguments;
+        $params = empty($defaults) ? array() : $defaults;
+        while (!empty($args)) {
+            $name = array_shift($args);
+            if ($wildcard == $name) {
+                $params[$name] = join('/', $args);
+                break;
+            } else {
+                $params[$name] = array_shift($args);
+            }
+        }
+        return $params;
+    }
+
 }

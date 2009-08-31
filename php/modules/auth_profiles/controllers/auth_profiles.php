@@ -134,7 +134,7 @@ class Auth_Profiles_Controller extends Local_Controller
      */
     public function editprofile()
     {
-        $params = Router::get_params(array(
+        $params = $this->getRouteParams(array(
             'screen_name' => null,
         ));
 
@@ -203,7 +203,7 @@ class Auth_Profiles_Controller extends Local_Controller
      */
     public function reverifyemail()
     {
-        $params = Router::get_params(array(
+        $params = $this->getRouteParams(array(
             'login_name' => null,
         ));
 
@@ -360,7 +360,7 @@ class Auth_Profiles_Controller extends Local_Controller
      */
     public function settings()
     {
-        $params = Router::get_params(array(
+        $params = $this->getRouteParams(array(
             'screen_name' => null,
         ));
 
