@@ -17,6 +17,8 @@ NoteAssistant.prototype = (function () {
         setup: function () {
             var listeners = [];
 
+            this.controller.stageController.setWindowOrientation('free');
+
             this.controller.setupWidget(Mojo.Menu.appMenu, 
                 Memento.app_menu.attr, Memento.app_menu.model);
 
